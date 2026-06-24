@@ -1,0 +1,12 @@
+<div class="modal-alerta" *ngIf="mostrar">
+  <div class="contenido-alerta">
+    <h3>{{ titulo }}</h3> 
+    <hr>
+    <p>{{ mensaje }}</p>
+    
+    <div class="botones-alerta">
+      <button (click)="cerrar(false)" class="btn-cancelar">{{ txtCancelar }}</button>
+      <button (click)="cerrar(true)" class="btn-aceptar">{{ txtAceptar }}</button>
+    </div>
+  </div>
+</div>

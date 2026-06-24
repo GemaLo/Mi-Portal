@@ -1,0 +1,52 @@
+<!-- frontend/src/app/components/layout/navbar/navbar.component.html -->
+<nav class="navbar">
+  <div class="navbar-left">
+    <button class="sidebar-toggle" (click)="onToggleSidebar()">
+      <i class="fas fa-bars"></i>
+    </button>
+    
+    <div class="page-info">
+      <h1 class="page-title">Mi Portal RH</h1>
+      <p class="page-subtitle">Gestión integral del capital humano</p>
+    </div>
+  </div>
+
+  <div class="navbar-right">
+    <!-- Indicadores -->
+    <div class="indicators">
+      <div class="indicator" (click)="simulateNotification()">
+        <i class="fas fa-user-clock indicator-icon"></i>
+        <span class="indicator-text">{{ notifications }} Notificaciones</span>
+      </div>
+      
+      <div class="indicator" (click)="simulateMessages()">
+        <i class="fas fa-file-signature indicator-icon"></i>
+        <span class="indicator-text">{{ messages }} Mensajes</span>
+      </div>
+    </div>
+
+    <!-- Perfil de usuario -->
+    <div class="user-profile">
+      <div class="user-avatar">{{ getUserInitials() }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ userName }}</div>
+        <div class="user-role">{{ userRole }}</div>
+      </div>
+      <div class="user-dropdown">
+        <i class="fas fa-chevron-down"></i>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Header -->
+<div class="header-admin">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="h3 mb-0"><i class="fas fa-user-shield me-2"></i>{{ pageTitle }}</h1>
+                <p class="mb-0">{{ pageDetalle}}</p>
+            </div>
+        </div>
+    </div>
+</div>

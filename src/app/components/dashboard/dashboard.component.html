@@ -1,0 +1,54 @@
+<section class="dashboard">
+  <!-- Encabezado -->
+  <div class="dashboard-header">
+    <h1 class="dashboard-title">{{ getRoleText() }}</h1>
+    <p class="dashboard-subtitle">Gestión integral del capital humano</p>
+  </div>
+
+  <!-- Grid de Métricas -->
+  <div class="metrics-grid">
+    <a *ngFor="let metric of metrics" 
+       [routerLink]="metric.route" 
+       class="metric-card"
+       [ngClass]="'metric-' + metric.color"
+       (mouseenter)="onCardHover($event)"
+       (mouseleave)="onCardLeave($event)">
+      
+      <div class="metric-header">
+        <h3 class="metric-title">{{ metric.title }}</h3>
+        <div class="metric-icon">
+          <i [class]="metric.icon"></i>
+        </div>
+      </div>
+      
+      <div class="metric-value" *ngIf="metric.value !== undefined">
+        {{ metric.value }}<span *ngIf="metric.title === 'Tasa Retención'">%</span>
+      </div>
+      
+      <div class="metric-detail" *ngIf="metric.detail">
+        {{ metric.detail }}
+      </div>
+    </a>
+  </div>
+
+  <!-- Sección adicional (puedes agregar más contenido) -->
+  <div class="dashboard-extra">
+    <div class="quick-actions">
+      <h3>Acciones Rápidas</h3>
+      <div class="actions-grid">
+        <button class="action-btn">
+          <i class="fas fa-user-plus"></i>
+          <span>Nuevo Empleado</span>
+        </button>
+        <button class="action-btn">
+          <i class="fas fa-file-export"></i>
+          <span>Exportar Reporte</span>
+        </button>
+        <button class="action-btn">
+          <i class="fas fa-calendar-alt"></i>
+          <span>Programar Revisión</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

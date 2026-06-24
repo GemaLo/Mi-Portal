@@ -1,0 +1,196 @@
+/* frontend/src/app/components/creacion-de-plazas/creacion-de-plazas.component.css */
+/* Estilos copiados de tu PHP con adaptaciones para Angular */
+
+.creacion-plazas-container {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  padding: -20px;
+}
+
+.header-admin {
+    background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-primario-oscuro) 100%);
+  color: white;
+  padding: 20px 0;
+  border-radius: 0 0 15px 15px;
+  margin-bottom: 30px;
+}
+
+.upload-area {
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.upload-area:hover {
+  border-color: #0d6efd;
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+.upload-area.dragover {
+  border-color: #0d6efd;
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+.centrar-btn-add-plaza {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.btns_ver-arr {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+/* Estilos para la tabla */
+.table-responsive {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.results-table {
+  margin-bottom: 0;
+}
+
+.results-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #343a40;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.results-table td {
+  vertical-align: middle;
+}
+
+/* Clases para estados de filas */
+.bkg-verde {
+  background-color: #d4edda !important;
+}
+
+.bkg-amarillo {
+  background-color: #fff3cd !important;
+}
+
+.bkg-azul {
+  background-color: #2761ff !important;
+  color: #f3f3f3 !important;
+}
+
+.bkg-repetido {
+  background-color: #e2e3e5 !important;
+}
+
+.bkg-rojo {
+  background-color: #f8d7da !important;
+  color: #721c24;
+}
+
+#processBtn{
+  background-color: var(--color-primario);
+  color: #FFFFFF;
+}
+#processBtn:hover{
+  border:1px solid var(--color-primario);
+  background-color: #FFFFFF;
+  color: var(--color-primario);
+}
+/* Celdas editables */
+.celda-editable {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.celda-editable:focus {
+  outline: none;
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Diálogo */
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+}
+
+.dialog-box {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+}
+
+.dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Badges personalizados */
+.badge {
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 10px;
+}
+
+/* Modal */
+.modal {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, var(--color-primario-oscuro) 0%, var(--color-primario-claro) 100%);
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header-admin .text-end {
+    text-align: left !important;
+    margin-top: 15px;
+  }
+  
+  .btns_ver-arr {
+    flex-direction: column;
+  }
+  
+  .upload-area {
+    padding: 20px;
+  }
+  
+  .table-responsive {
+    font-size: 14px;
+  }
+}

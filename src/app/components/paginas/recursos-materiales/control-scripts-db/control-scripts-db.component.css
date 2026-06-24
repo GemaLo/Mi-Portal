@@ -1,0 +1,92 @@
+/* Estilos adicionales para Bootstrap */
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 0.85rem;
+}
+
+code {
+    font-family: 'Courier New', monospace;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+}
+
+.btn-group .btn {
+    font-size: 0.8rem;
+}
+
+.modal.show {
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex !important;
+    /* max-width: 800px; */
+    /* align-items: center;
+    justify-content: center; */
+}
+
+.font-monospace {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Scroll personalizado para el textarea */
+textarea {
+    resize: vertical;
+    font-family: 'Courier New', monospace;
+}
+
+/* Estados de ejecución */
+.bg-success {
+    background-color: #28a745 !important;
+}
+
+.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.bg-warning {
+    background-color: #ffc107 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        border-radius: 0.25rem !important;
+        margin-bottom: 0.25rem;
+    }
+    
+    .card-footer .btn-outline-danger {
+        margin-top: 0.5rem;
+    }
+}

@@ -1,0 +1,352 @@
+<div class="container-fluid py-4">
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h2 mb-0">
+        <i class="bi bi-file-earmark-text me-2"></i>
+        Solicitudes
+      </h1>
+      <small class="text-muted">
+        {{ esEdicion ? 'Editando requerimiento' : 'Visualizando requerimiento' }}
+        <span *ngIf="requerimientoActual" class="ms-2 badge bg-secondary">
+          {{ requerimientoActual.folio }}
+        </span>
+      </small>
+    </div>
+    <div>
+      <button *ngIf="!esEdicion" class="btn btn-primary me-2" (click)="activarEdicion()">
+        <i class="bi bi-pencil me-1"></i> Editar
+      </button>
+      <button *ngIf="esEdicion" class="btn btn-outline-secondary me-2" (click)="cancelarEdicion()">
+        <i class="bi bi-x-circle me-1"></i> Cancelar
+      </button>
+      <button class="btn btn-success" (click)="onSubmit()" [disabled]="cargando">
+        <span *ngIf="cargando" class="spinner-border spinner-border-sm me-1" role="status"></span>
+        <i *ngIf="!cargando" class="bi bi-check-circle me-1"></i>
+        {{ esEdicion ? 'Actualizar' : 'Crear' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Alertas de estado -->
+  <div *ngIf="requerimientoActual" class="alert alert-info d-flex align-items-center mb-3">
+    <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+    <div>
+      <strong>Estado actual:</strong>
+      <span class="badge ms-2" [ngClass]="getColorEstatus(requerimientoActual.estatus)">
+        {{ getLabelEstatus(requerimientoActual.estatus) }}
+      </span>
+      <span class="ms-3">
+        <i class="bi bi-calendar3 me-1"></i>
+        Creado: {{ requerimientoActual.createdAt | date:'dd/MM/yyyy HH:mm' }}
+      </span>
+      <span *ngIf="requerimientoActual.updatedAt" class="ms-3">
+        <i class="bi bi-clock-history me-1"></i>
+        Última actualización: {{ requerimientoActual.updatedAt | date:'dd/MM/yyyy HH:mm' }}
+      </span>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- FORMULARIO PRINCIPAL -->
+  <!-- ========================================== -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-white">
+      <h5 class="card-title mb-0">
+        <i class="bi bi-file-earmark me-2"></i>
+        Datos del Requerimiento
+      </h5>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="requerimientoForm" (ngSubmit)="onSubmit()">
+        
+        <!-- Fila 1: Folio, Título, Tipo -->
+        <div class="row mb-3">
+          <div class="col-md-2">
+            <label class="form-label fw-bold">Folio</label>
+            <input type="text" class="form-control" formControlName="folio" readonly>
+          </div>
+          <div class="col-md-7">
+            <label class="form-label fw-bold">Título *</label>
+            <input type="text" class="form-control" formControlName="titulo" 
+                   [class.is-invalid]="requerimientoForm.get('titulo')?.invalid && requerimientoForm.get('titulo')?.touched">
+            <div class="invalid-feedback">
+              El título es obligatorio
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Tipo *</label>
+            <select class="form-select" formControlName="tipoRequerimiento"
+                    [class.is-invalid]="requerimientoForm.get('tipoRequerimiento')?.invalid && requerimientoForm.get('tipoRequerimiento')?.touched">
+              <option value="">Seleccionar...</option>
+              <option *ngFor="let tipo of tiposRequerimiento" [value]="tipo.value">
+                {{ tipo.label }}
+              </option>
+            </select>
+            <div class="invalid-feedback">
+              El tipo es obligatorio
+            </div>
+          </div>
+        </div>
+
+        <!-- Fila 2: Descripción -->
+        <div class="row mb-3">
+          <div class="col-12">
+            <label class="form-label fw-bold">Descripción</label>
+            <textarea class="form-control" formControlName="descripcion" rows="3"
+                      [class.is-invalid]="requerimientoForm.get('descripcion')?.invalid && requerimientoForm.get('descripcion')?.touched"></textarea>
+            <div class="invalid-feedback">
+              La descripción no puede exceder los 4000 caracteres
+            </div>
+          </div>
+        </div>
+
+        <!-- Fila 3: Prioridad, Ambiente, Categoría -->
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Prioridad *</label>
+            <select class="form-select" formControlName="prioridad">
+              <option *ngFor="let p of prioridades" [value]="p.value">
+                {{ p.label }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Ambiente *</label>
+            <select class="form-select" formControlName="ambiente">
+              <option value="DEV">DEV</option>
+              <option value="QA">QA</option>
+              <option value="PROD">PROD</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Categoría</label>
+            <input type="text" class="form-control" formControlName="categoria" 
+                   placeholder="Ej: Administrativo, Técnico">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Fecha Límite</label>
+            <input type="date" class="form-control" formControlName="fechaLimite">
+          </div>
+        </div>
+
+        <!-- Fila 4: Personas -->
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Empleado que solicita *</label>
+            <input type="text" class="form-control" formControlName="numEmpSolicita"
+                   [class.is-invalid]="requerimientoForm.get('numEmpSolicita')?.invalid && requerimientoForm.get('numEmpSolicita')?.touched">
+            <div class="invalid-feedback">Campo obligatorio</div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Empleado asignado</label>
+            <input type="text" class="form-control" formControlName="numEmpAsignado">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Empleado autoriza</label>
+            <input type="text" class="form-control" formControlName="numEmpAutoriza">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-bold">Área solicitante *</label>
+            <input type="text" class="form-control" formControlName="areaSolicitante"
+                   [class.is-invalid]="requerimientoForm.get('areaSolicitante')?.invalid && requerimientoForm.get('areaSolicitante')?.touched">
+            <div class="invalid-feedback">Campo obligatorio</div>
+          </div>
+        </div>
+
+        <!-- Fila 5: Detalles adicionales -->
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Área Responsable</label>
+            <input type="text" class="form-control" formControlName="areaResponsable">
+          </div>
+          <!-- <div class="col-md-4">
+            <label class="form-label fw-bold">Departamento</label>
+            <input type="text" class="form-control" formControlName="departamento">
+          </div> -->
+          <!-- <div class="col-md-4">
+            <label class="form-label fw-bold">Tiempo Estimado (horas)</label>
+            <input type="number" class="form-control" formControlName="tiempoEstimado" min="0" step="0.5">
+          </div> -->
+        </div>
+
+        <!-- Fila 6: Motivo y Observaciones -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Motivo</label>
+            <textarea class="form-control" formControlName="motivo" rows="2"></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Observaciones</label>
+            <textarea class="form-control" formControlName="observaciones" rows="2"></textarea>
+          </div>
+        </div>
+
+        <!-- Fila 7: Checkboxes de control -->
+        <div class="row mb-3">
+          <div class="col-12">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" formControlName="requiereArchivo" id="requiereArchivo">
+              <label class="form-check-label" for="requiereArchivo">
+                Requiere archivo adjunto
+              </label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" formControlName="requiereValidacion" id="requiereValidacion">
+              <label class="form-check-label" for="requiereValidacion">
+                Requiere validación
+              </label>
+            </div>
+            <!-- <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" formControlName="esReactivacion" id="esReactivacion">
+              <label class="form-check-label" for="esReactivacion">
+                Es reactivación
+              </label>
+            </div> -->
+          </div>
+        </div>
+
+        <!-- Fila 8: Resultado (solo visible si está resuelto) -->
+        <!-- <div *ngIf="requerimientoActual?.estatus === 'RESUELTO'" class="row mb-3">
+          <div class="col-12">
+            <label class="form-label fw-bold text-success">Resultado</label>
+            <textarea class="form-control" formControlName="resultado" rows="2" 
+                      placeholder="Describa el resultado de la atención"></textarea>
+          </div>
+        </div> -->
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- SECCIÓN DE ARCHIVOS ASOCIADOS -->
+  <!-- ========================================== -->
+  <!-- <div class="card shadow-sm mb-4" *ngIf="archivosAsociados.length > 0">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0">
+        <i class="bi bi-paperclip me-2"></i>
+        Archivos Asociados ({{ archivosAsociados.length }})
+      </h5>
+      <button class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-plus-circle me-1"></i> Agregar archivo
+      </button>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 40px;">#</th>
+              <th>Nombre</th>
+              <th>Tipo</th>
+              <th>Descripción</th>
+              <th>Tamaño</th>
+              <th>Subido por</th>
+              <th style="width: 150px;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let archivo of archivosAsociados; let i = index">
+              <td>
+                <span class="badge bg-secondary">{{ i + 1 }}</span>
+                <i *ngIf="archivo.esPrincipal" class="bi bi-star-fill text-warning ms-1" 
+                   title="Archivo principal"></i>
+              </td>
+              <td>
+                <strong>{{ archivo.archivo?.nombreArchivo }}</strong>
+                <span class="badge bg-info ms-2" [class.bg-primary]="archivo.tipoArchivoReq === 'RESPUESTA'">
+                  {{ getTipoArchivoLabel(archivo.tipoArchivoReq) }}
+                </span>
+              </td>
+              <td>
+                <span class="badge bg-secondary">{{ archivo.archivo?.extension | uppercase }}</span>
+              </td>
+              <td>{{ archivo.archivo?.descripcion | slice:0:50 }}{{ (archivo.archivo?.descripcion?.length || 0) > 50 ? '...' : '' }}</td>
+              <td>{{ formatearTamanio(archivo.archivo?.tamano || 0) }}</td>
+              <td>
+                <small>{{ archivo.archivo?.subidoPor }}</small>
+                <br>
+                <small class="text-muted">{{ archivo.archivo?.fechaSubida | date:'dd/MM/yyyy' }}</small>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-outline-info me-1" (click)="verArchivo(archivo)" title="Ver información">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-success" (click)="descargarArchivo(archivo)" title="Descargar">
+                  <i class="bi bi-download"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div> -->
+
+  <!-- ========================================== -->
+  <!-- BITÁCORA DE CAMBIOS DE PROCESOS -->
+  <!-- ========================================== -->
+  <div class="card shadow-sm" *ngIf="bitacora.length > 0">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0">
+        <i class="bi bi-clock-history me-2"></i>
+        Bitácora de Cambios
+      </h5>
+      <span class="badge bg-secondary">{{ bitacora.length }} eventos</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="timeline p-3">
+        <div *ngFor="let evento of bitacora | slice:0:50; let last = last" 
+             class="timeline-item d-flex position-relative">
+          
+          <!-- Línea vertical -->
+          <div class="timeline-line" 
+               [class.last]="last"
+               style="position: absolute; left: 20px; top: 0; bottom: 0; width: 2px; background: #dee2e6;">
+          </div>
+          
+          <!-- Punto -->
+          <div class="timeline-dot me-3" 
+               style="width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-top: 6px;"
+               [ngClass]="getColorEstatus(evento.estatusNuevo)">
+          </div>
+          
+          <!-- Contenido -->
+          <div class="timeline-content flex-grow-1 pb-3" [class.border-0]="last">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <span class="fw-bold">{{ evento.numEmpModifica }}</span>
+                <span class="text-muted mx-2">→</span>
+                <span *ngIf="evento.estatusAnterior" class="badge bg-secondary me-1">
+                  {{ getLabelEstatus(evento.estatusAnterior) }}
+                </span>
+                <span *ngIf="evento.estatusAnterior" class="text-muted me-1">
+                  <i class="bi bi-arrow-right"></i>
+                </span>
+                <span class="badge" [ngClass]="getColorEstatus(evento.estatusNuevo)">
+                  {{ getLabelEstatus(evento.estatusNuevo) }}
+                </span>
+              </div>
+              <small class="text-muted">
+                <i class="bi bi-clock me-1"></i>
+                {{ evento.fechaCambio | date:'dd/MM/yyyy HH:mm' }}
+              </small>
+            </div>
+            <div *ngIf="evento.comentario" class="mt-1 text-muted small">
+              <i class="bi bi-chat me-1"></i>
+              {{ evento.comentario }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensaje sin datos -->
+  <div *ngIf="!requerimientoActual" class="text-center py-5">
+    <i class="bi bi-inbox display-1 text-muted"></i>
+    <h4 class="text-muted mt-3">No hay requerimiento seleccionado</h4>
+    <p class="text-muted">Selecciona o crea un nuevo requerimiento para comenzar</p>
+  </div>
+</div>

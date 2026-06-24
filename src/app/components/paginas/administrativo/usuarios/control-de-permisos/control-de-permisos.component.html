@@ -1,0 +1,454 @@
+<!-- frontend/src/app/components/control-de-permisos/control-de-permisos.component.html -->
+<div class="control-permisos-container">
+    <!-- Header -->
+    <div class="col-md-6 text-end">
+         <button class="btn btn-light" (click)="verModalModulos()">
+           <i class="fas fa-save me-2"></i>Modulos y permisos
+         </button>
+         <button class="btn btn-light" id="btnGuardarMasivo" 
+                 (click)="guardarMasivo()"
+                 [disabled]="getTotalCambiosPendientes() === 0 || isLoading">
+             <i class="fas fa-save me-2"></i>Guardado Masivo 
+             <span *ngIf="getTotalCambiosPendientes() > 0" class="badge bg-primary ms-1">
+                 {{getTotalCambiosPendientes()}}
+             </span>
+         </button>
+     </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="modalModulos" [class.show]="showModulosModal" [style.display]="showModulosModal ? 'block' : 'none'">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Modulos</h5>
+                  <button type="button" class="btn-close" (click)="showModulosModal = false"></button>
+                </div>
+            
+                <div class="modal-body">
+                    <!-- Navegación por pestañas -->
+                    <div class="nav nav-tabs">
+                        <button class="nav-link" 
+                                [class.active]="activeTab === 'datos-basicos'"
+                                (click)="setActiveTab('datos-basicos')">
+                          <i class="fas fa-user me-2"></i>Datos Básicos
+                        </button>
+                        
+                        <button class="nav-link" 
+                                [class.active]="activeTab === 'agregar-modulo'"
+                                (click)="setActiveTab('agregar-modulo')">
+                          <i class="fas fa-cog me-2"></i>Agregar modulo
+                        </button>
+                        
+                        <button class="nav-link" 
+                                [class.active]="activeTab === 'agregar-permisos'"
+                                (click)="setActiveTab('agregar-permisos')">
+                          <i class="fas fa-cog me-2"></i>Agregar permisos
+                        </button>
+                      </div>
+            
+                    <div class="tab-content" id="empleadoTabsContent">
+                        <!-- Pestaña 1: Datos Básicos -->
+                        <div class="tab-pane" 
+                                [class.active]="activeTab === 'datos-basicos'"
+                                [class.show]="activeTab === 'datos-basicos'">
+                            <p>Información de modulos básicos...</p>
+                        </div>
+                        
+                        <!-- Pestaña 2: Agregar modulo -->
+                        <div class="tab-pane" 
+                            [class.active]="activeTab === 'agregar-modulo'"
+                            [class.show]="activeTab === 'agregar-modulo'">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="nombre" class="form-label required-field">Nombre del Modulo</label>
+                                    <input type="text" class="form-control" id="nombreModulo" 
+                                            [(ngModel)]="nuevoCatalogo.nombre"
+                                            placeholder="Ingrese el nombre del modulo">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="descripcion" class="form-label">Descripción</label>
+                                    <textarea class="form-control" id="descripcionCatalogo" [(ngModel)]="nuevoCatalogo.descripcion"
+                                        rows="3" placeholder="Descripción del modulo"></textarea>
+                                </div>
+                            </div>
+                            <br>
+                            <div>
+                                <button (click)="guardarModulo()">Guardar</button>
+                            </div>
+                        </div>
+                        <!-- Pestaña 3: Agregar Permisos -->
+                        <div class="tab-pane" 
+                            [class.active]="activeTab === 'agregar-permisos'"
+                            [class.show]="activeTab === 'agregar-permisos'">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="nombre" class="form-label required-field">Nombre del Permiso</label>
+                                    <input type="text" class="form-control" id="Modulo" 
+                                            [(ngModel)]="nuevoCatalogo.nombre"
+                                            placeholder="Ingrese el nombre del modulo">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="nombreHoja" class="form-label required-field">Descripción</label>
+                                    <input type="text" class="form-control" id="nombreHojaCatalogo" 
+                                            [(ngModel)]="nuevoCatalogo.nombreHoja"
+                                            placeholder="Ingrese el nombre de hoja">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="descripcion" class="form-label">Activo</label>
+                                    <textarea class="form-control" id="descripcionCatalogo" 
+                                            [(ngModel)]="nuevoCatalogo.descripcion"
+                                            rows="3" placeholder="Descripción del modulo"></textarea>
+                                </div>
+                            </div>
+                            <div class="tabla-permisos">
+                                <table>
+                                    <thead>
+                                        <th>Nombre</th>
+                                        <th>Descripción</th>
+                                        <th>Activo</th>
+                                    </thead>
+                                    <tbody>
+                                        <!-- <tr *ngFor="let permiso of getPermisos">
+                                            <td>
+                                                {{permiso.nombre}}
+                                            </td>
+                                            <td>
+                                                {{permiso.descripcion}}
+                                            </td>
+                                            <td>
+                                                {{permiso.activo}}
+                                            </td>
+                                        </tr> -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                      
+                    <div class="modal-footer">
+                        <!-- <button id="guardarCatalogo" class="btn btn-success" (click)="agregarModulo()">Guardar</button> -->
+                        <button class="btn btn-secondary" (click)="showModulosModal = false">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+       
+
+    <div class="container">
+        <!-- Controles de tabla -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" #inputBusqueda class="form-control" 
+                           placeholder="Buscar empleados..."
+                           (input)="onBuscar($event)">
+                </div>
+            </div>
+            <div class="col-md-6 text-end">
+                <select #selectRegistros class="form-select w-auto d-inline-block" 
+                        (change)="onCambiarRegistros($event)">
+                    <option value="10">10 registros</option>
+                    <option value="25">25 registros</option>
+                    <option value="50">50 registros</option>
+                    <option value="100">100 registros</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Tabla de Empleados -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table #tablaEmpleados id="tablaEmpleados" class="table table-striped table-hover w-100">
+                        <thead>
+                            <tr>
+                                <!-- Cabeceras dinámicas (de la BD) -->
+                                <th *ngFor="let columna of columnas" [style.width]="columna.width">
+                                    {{columna.label}}
+                                </th>
+                            </tr>
+                        </thead>
+                        
+                        <tbody>
+                            <!-- Filas dinámicas (empleados de la BD) -->
+                            <tr *ngFor="let empleado of empleados" [attr.data-id]="empleado.id">
+                                
+                                <!-- Columnas dinámicas basadas en type -->
+                                <ng-container *ngFor="let columna of columnas">
+                                    
+                                    <!-- Columna: Empleado -->
+                                    <td *ngIf="columna.type === 'empleado'" [style.width]="columna.width">
+                                        <div class='empleado-info'>
+                                            <div class='avatar'>{{empleado.iniciales}}</div>
+                                            <div>
+                                                <div class='fw-semibold'>{{empleado.nombre}}</div>
+                                                <small class='text-muted'>ID: {{empleado.id}}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    
+                                    <!-- Columna: Texto normal (Departamento) -->
+                                    <td *ngIf="columna.type === 'text'" [style.width]="columna.width">
+                                        {{getEmpleadoValue(empleado, columna.key)}}
+                                    </td>
+                                        
+                                    
+                                    <!-- Columna: Estado -->
+                                    <td *ngIf="columna.type === 'estado'" [style.width]="columna.width">
+                                        <span [ngClass]="getEstadoClass(empleado.estado)" class='badge-estado'>
+                                            {{empleado.estado}}
+                                        </span>
+                                    </td>
+                                    
+                                    <!-- Columnas de checkboxes (Vacaciones, Sistemas, etc.) -->
+                                    <td *ngIf="columna.type === 'checkbox'" [style.width]="columna.width" class='text-center'>
+                                        <input type='checkbox' class='permisos-checkbox' 
+                                               [checked]="empleado.permisos[columna.modulo!]"
+                                               (change)="onPermisoChange(empleado.id, columna.modulo!, $any($event.target).checked)">
+                                    </td>
+                                    
+                                    <!-- Columna: Acciones -->
+                                    <td *ngIf="columna.type === 'acciones'" [style.width]="columna.width">
+                                        <div class='acciones-rapidas'>
+                                            <button class='btn btn-success btn-sm btn-guardar-individual'
+                                                    (click)="guardarIndividual(empleado.id)"
+                                                    [disabled]="!tieneCambiosPendientes(empleado.id) || isLoading"
+                                                    [title]="tieneCambiosPendientes(empleado.id) ? 'Guardar cambios' : 'Sin cambios'">
+                                                <i class='fas fa-save'></i>
+                                            </button>
+                                            <!-- Solo mostrar botón de configuración si hay módulos activos -->
+                                            <button *ngIf="obtenerModulosActivos(empleado.id).length > 0"
+                                                    class='btn btn-warning btn-sm btn-config-avanzada'
+                                                    (click)="abrirConfigAvanzada(empleado.id)"
+                                                    [title]="'Configurar ' + obtenerModulosActivos(empleado.id).length + ' módulos activos'">
+                                                <i class='fas fa-cog'></i>
+                                            </button>
+                                            <!-- O mostrar un botón deshabilitado si no hay módulos -->
+                                            <button *ngIf="obtenerModulosActivos(empleado.id).length === 0"
+                                                    class='btn btn-secondary btn-sm'
+                                                    disabled
+                                                    title="No hay módulos activos para configurar">
+                                                <i class='fas fa-cog'></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    
+                                </ng-container>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Configuración Avanzada -->
+    <div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'" 
+         id="modalConfigAvanzada" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Configuración Avanzada de Permisos</h5>
+                    <button type="button" class="btn-close btn-close-white" 
+                            (click)="cerrarModal()" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body">
+                    <!-- Información del empleado -->
+                    <div id="infoEmpleadoModal" class="mb-4 p-3 bg-light rounded" *ngIf="empleadoSeleccionado">
+                        <h6 class="mb-1">{{empleadoSeleccionado.nombre}}</h6>
+                        <p class="mb-0 text-muted">
+                            Departamento: {{empleadoSeleccionado.departamento}} | 
+                            ID: {{empleadoSeleccionado.id}}
+                        </p>
+                        <p class="mb-0 mt-2">
+                            <small>Módulos activos: 
+                                <span *ngFor="let modulo of obtenerModulosActivos(empleadoSeleccionado.id)" 
+                                      class="badge bg-info me-1">
+                                    {{getNombreModulo(modulo)}}
+                                </span>
+                            </small>
+                        </p>
+                    </div>
+    
+                    <!-- Módulo de Vacaciones (solo si está activo) -->
+                    <div class="config-modulo" *ngIf="configAvanzada.vacaciones">
+                        <h6><i class="fas fa-umbrella-beach me-2"></i>Módulo de Vacaciones</h6>
+                        <div class="permisos-avanzados">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="vacaciones_lectura"
+                                       [(ngModel)]="configAvanzada.vacaciones.lectura">
+                                <label class="form-check-label" for="vacaciones_lectura">Permiso de lectura</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="vacaciones_escritura"
+                                       [(ngModel)]="configAvanzada.vacaciones.escritura">
+                                <label class="form-check-label" for="vacaciones_escritura">Permiso de escritura</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="vacaciones_aprobacion"
+                                       [(ngModel)]="configAvanzada.vacaciones.aprobacion">
+                                <label class="form-check-label" for="vacaciones_aprobacion">Aprobar solicitudes</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="vacaciones_reportes"
+                                       [(ngModel)]="configAvanzada.vacaciones.reportes">
+                                <label class="form-check-label" for="vacaciones_reportes">Generar reportes</label>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- Módulo de Sistemas (solo si está activo) -->
+                    <div class="config-modulo" *ngIf="configAvanzada.sistemas">
+                        <h6><i class="fas fa-laptop me-2"></i>Módulo de Sistemas</h6>
+                        <div class="permisos-avanzados">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="sistemas_lectura"
+                                       [(ngModel)]="configAvanzada.sistemas.lectura">
+                                <label class="form-check-label" for="sistemas_lectura">Acceso básico</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="sistemas_configuracion"
+                                       [(ngModel)]="configAvanzada.sistemas.configuracion">
+                                <label class="form-check-label" for="sistemas_configuracion">Configuración del sistema</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="sistemas_administracion"
+                                       [(ngModel)]="configAvanzada.sistemas.administracion">
+                                <label class="form-check-label" for="sistemas_administracion">Administración de usuarios</label>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- Módulo de Ficha Técnica (solo si está activo) -->
+                    <div class="config-modulo" *ngIf="configAvanzada.ficha">
+                        <h6><i class="fas fa-file-alt me-2"></i>Módulo de Ficha Técnica</h6>
+                        <div class="permisos-avanzados">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="ficha_lectura"
+                                       [(ngModel)]="configAvanzada.ficha.lectura">
+                                <label class="form-check-label" for="ficha_lectura">Consultar fichas</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="ficha_escritura"
+                                       [(ngModel)]="configAvanzada.ficha.escritura">
+                                <label class="form-check-label" for="ficha_escritura">Crear/editar fichas</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="ficha_eliminar"
+                                       [(ngModel)]="configAvanzada.ficha.eliminar">
+                                <label class="form-check-label" for="ficha_eliminar">Eliminar fichas</label>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- Módulo de Nómina (solo si está activo) -->
+                    <div class="config-modulo" *ngIf="configAvanzada.nomina">
+                        <h6><i class="fas fa-money-bill-wave me-2"></i>Módulo de Nómina</h6>
+                        <div class="permisos-avanzados">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="nomina_consulta"
+                                       [(ngModel)]="configAvanzada.nomina.consulta">
+                                <label class="form-check-label" for="nomina_consulta">Consultar nómina</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="nomina_modificacion"
+                                       [(ngModel)]="configAvanzada.nomina.modificacion">
+                                <label class="form-check-label" for="nomina_modificacion">Modificar datos</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="nomina_aprobacion"
+                                       [(ngModel)]="configAvanzada.nomina.aprobacion">
+                                <label class="form-check-label" for="nomina_aprobacion">Aprobar nómina</label>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- Módulo de Reportes (solo si está activo) -->
+                    <div class="config-modulo" *ngIf="configAvanzada.reportes">
+                        <h6><i class="fas fa-chart-line me-2"></i>Módulo de Reportes</h6>
+                        <div class="permisos-avanzados">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="reportes_generar"
+                                       [(ngModel)]="configAvanzada.reportes.generar">
+                                <label class="form-check-label" for="reportes_generar">Generar reportes</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="reportes_exportar"
+                                       [(ngModel)]="configAvanzada.reportes.exportar">
+                                <label class="form-check-label" for="reportes_exportar">Exportar reportes</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="reportes_avanzados"
+                                       [(ngModel)]="configAvanzada.reportes.avanzados">
+                                <label class="form-check-label" for="reportes_avanzados">Reportes avanzados</label>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- Módulo de Configuración (solo si está activo) -->
+                    <div class="config-modulo" *ngIf="configAvanzada.configuracion">
+                        <h6><i class="fas fa-cogs me-2"></i>Módulo de Configuración</h6>
+                        <div class="permisos-avanzados">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="configuracion_general"
+                                       [(ngModel)]="configAvanzada.configuracion.general">
+                                <label class="form-check-label" for="configuracion_general">Configuración general</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="configuracion_usuarios"
+                                       [(ngModel)]="configAvanzada.configuracion.usuarios">
+                                <label class="form-check-label" for="configuracion_usuarios">Gestión de usuarios</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="configuracion_permisos"
+                                       [(ngModel)]="configAvanzada.configuracion.permisos">
+                                <label class="form-check-label" for="configuracion_permisos">Gestión de permisos</label>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- Mensaje si no hay módulos activos -->
+                    <div *ngIf="obtenerModulosActivos(empleadoSeleccionado?.id || 0).length === 0" 
+                         class="alert alert-warning text-center">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Este empleado no tiene módulos activos. Active al menos un módulo para configurar permisos avanzados.
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" 
+                            (click)="cerrarModal()" [disabled]="isLoading">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" 
+                            id="btnGuardarConfigAvanzada"
+                            (click)="guardarConfigAvanzada()"
+                            [disabled]="isLoading || obtenerModulosActivos(empleadoSeleccionado?.id || 0).length === 0">
+                        <span *ngIf="!isLoading">Guardar Configuración</span>
+                        <span *ngIf="isLoading">Guardando...</span>
+                        <div *ngIf="isLoading" class="spinner-border spinner-border-sm ms-2" role="status">
+                            <span class="visually-hidden">Guardando...</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay para modal -->
+    <div class="modal-backdrop fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'"></div>
+
+    <!-- Loading global -->
+    <div *ngIf="isLoading" class="loading-overlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+</div>

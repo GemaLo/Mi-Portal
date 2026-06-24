@@ -1,0 +1,343 @@
+<p>empleados-masivos works!</p>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h6>Progreso de carga</h6>
+    <div class="progress mb-2">
+      <div class="progress-bar progress-bar-striped" 
+           [style.width.%]="progresoTotal">
+        {{ progresoTotal }}%
+      </div>
+    </div>
+    <p class="mb-0 text-muted small">
+      {{ archivosCompletados }} de {{ archivosRequeridos.length }} archivos cargados
+    </p>
+  </div>
+</div>
+
+<div class="card-body">
+  <select  name="organo"  id="organo"  class="form-select form-select-sm" [(ngModel)]="organoSeleccionado" [disabled]=organoSelect>
+    <option value="SC">SC</option>
+    <option value="SPF">SPF</option>
+    <option value="PRS">PRS</option>
+  </select>
+  <br>
+  <div class="form-check form-check-inline">
+    <input type="checkbox" class="form-check-input" name="agregarSolicitud" id="agregarSolicitud" [(ngModel)]="agregarSolicitud">
+    <label class="form-check-label" for="agregarSolicitud">Solicitud</label>
+  </div>
+
+  <div class="" *ngIf="agregarSolicitud == true">
+    <small class="text-muted d-block mt-1">
+      Agrega los datos del solicitante.
+    </small>
+        <app-form-solicitudes 
+          [idPersonasTemp]="idPersonasTemp",
+          [organoSelec]="organoSeleccionado">
+        </app-form-solicitudes>
+    <div *ngIf="mostrarFormSolicitudes" class="modal-backdrop fade show"></div>
+  </div>
+</div>
+<br>
+
+<div class="container">
+  <!-- FILA 1: Personas y Asignacion -->
+  <div class="row">
+    <div class="col">
+      <div class="card mb-3" [class.border-success]="estadoPersonas.completado"
+           [class.border-secondary]="!estadoPersonas.completado">
+        <div class="card-header" 
+             [class.bg-success]="estadoPersonas.completado" 
+             [class.bg-primary]="!estadoPersonas.completado" 
+             class="text-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">1️⃣ Personas</h5>
+            <span *ngIf="estadoPersonas.completado" class="badge bg-light text-success">✓ Completado</span>
+            <span *ngIf="!estadoPersonas.completado" class="badge bg-light text-secondary">Pendiente</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Mostrar componente SOLO si está activo -->
+          <app-subir-archivo
+            *ngIf="estaActivo('personas')"
+            idInstancia="personas"
+            tipoArchivo="excel"
+            aceptarExtensiones=".xlsx"
+            [tamanoMaximoMB]="5"
+            [permitirMultiples]="true"
+            (archivosSeleccionados)="onArchivosSeleccionados('personas', $event)">
+          </app-subir-archivo>
+          <!-- Mostrar estado de procesamiento -->
+          <div *ngIf="estadoPersonas.procesando" class="mt-2">
+            <div class="alert alert-info mb-0 small">
+              <i class="fas fa-spinner fa-spin"></i> Procesando archivo...
+            </div>
+          </div>
+          <div *ngIf="estadoPersonas.error" class="mt-2">
+            <div class="alert alert-danger mb-0 small">
+              ❌ {{ estadoPersonas.error }}
+            </div>
+          </div>
+          <button (click)="validarTbTemp('personas',estadoPersonas.datosProcesados)">Agregar a temporal</button>
+          <div *ngIf="estadoPersonas.completado && estadoPersonas.datosProcesados?.length" class="mt-2">
+            <div class="alert alert-success mb-0 small">
+              <strong>✅ Archivo cargado:</strong> {{ estadoPersonas.archivos[0].name }}
+              <br>
+              <small>{{ estadoPersonas.datosProcesados?.length }} registros procesados</small>
+              <button (click)="descargarArchivoTrabajado('personas')">Ver archivo trabajado</button>
+              <button class="btn btn-outline-danger " (click)="reiniciarTipo('personas')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+              </svg>
+              </button>
+            </div>
+          </div>
+          <!-- Mensaje de bloqueo si no es su turno -->
+          <div *ngIf="!estaActivo('personas') && !estadoPersonas.completado" class="text-center py-4">
+            <i class="fas fa-lock fa-2x text-muted mb-2"></i>
+            <p class="text-muted mb-0">⏳ Esperando a que se complete el archivo anterior</p>
+            <small class="text-muted">Completa primero: {{ obtenerSiguientePendiente() }}</small>
+          </div>
+          
+          <!-- Mostrar resumen si ya está completado -->
+          <div *ngIf="estadoPersonas.completado && estadoPersonas.archivos.length > 0" class="mt-2">
+            <div class="alert alert-success mb-0 small">
+              <strong>✅ Archivo cargado:</strong> 
+              {{ estadoPersonas.archivos[0].name }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col">
+      <div class="card mb-3" [class.border-success]="estadoAsignacion.completado" 
+           [class.border-secondary]="!estadoAsignacion.completado">
+        <div class="card-header" 
+             [class.bg-success]="estadoAsignacion.completado" 
+             [class.bg-primary]="!estadoAsignacion.completado" 
+             class="text-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">2️⃣ Asignacion</h5>
+            <span *ngIf="estadoAsignacion.completado" class="badge bg-light text-success">✓ Completado</span>
+            <span *ngIf="!estadoAsignacion.completado" class="badge bg-light text-secondary">Pendiente</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <app-subir-archivo
+            *ngIf="estaActivo('asignacion')"
+            idInstancia="asignacion"
+            tipoArchivo="excel"
+            aceptarExtensiones=".xlsx"
+            [tamanoMaximoMB]="20"
+            [permitirMultiples]="true"
+            (archivosSeleccionados)="onArchivosSeleccionados('asignacion', $event)">
+          </app-subir-archivo>
+          <div *ngIf="estadoAsignacion.procesando" class="mt-2">
+            <div class="alert alert-info mb-0 small">
+              <i class="fas fa-spinner fa-spin"></i> Procesando archivo...
+            </div>
+          </div>
+          <div *ngIf="estadoAsignacion.error" class="mt-2">
+            <div class="alert alert-danger mb-0 small">
+              ❌ {{ estadoAsignacion.error }}
+            </div>
+          </div>
+          <button (click)="agregarAtbTemp('asignacion',estadoAsignacion.datosProcesados)">Agregar a temporal</button>
+          <div *ngIf="estadoAsignacion.completado && estadoAsignacion.datosProcesados?.length" class="mt-2">
+            <div class="alert alert-success mb-0 small">
+              <strong>✅ Archivo cargado:</strong> {{ estadoAsignacion.archivos[0].name }}
+              <br>
+              <small>{{ estadoAsignacion.datosProcesados?.length }} registros procesados</small>
+              <button (click)="descargarArchivoTrabajado('asignacion')">Ver archivo trabajado</button>
+              <button class="btn btn-outline-danger " (click)="reiniciarTipo('asignacion')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+              </svg>
+              </button>
+            </div>
+          </div>
+          <div *ngIf="!estaActivo('asignacion') && !estadoAsignacion.completado" class="text-center py-4">
+            <i class="fas fa-lock fa-2x text-muted mb-2"></i>
+            <p class="text-muted mb-0">⏳ Esperando a que se complete el archivo anterior</p>
+          </div>
+          
+          <div *ngIf="estadoAsignacion.completado && estadoAsignacion.archivos.length > 0" class="mt-2">
+            <div class="alert alert-success mb-0 small">
+              <strong>✅ Archivo cargado:</strong> 
+              {{ estadoAsignacion.archivos[0].name }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- FILA 2: Métodos de pago y Domicilios fiscales -->
+  <div class="row">
+    <div class="col">
+      <div class="card mb-3" [class.border-success]="estadoMetodosDePago.completado"
+           [class.border-secondary]="!estadoMetodosDePago.completado">
+        <div class="card-header" 
+             [class.bg-success]="estadoMetodosDePago.completado" 
+             [class.bg-primary]="!estadoMetodosDePago.completado" 
+             class="text-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">3️⃣ Métodos de pago</h5>
+            <span *ngIf="estadoMetodosDePago.completado" class="badge bg-light text-success">✓ Completado</span>
+            <span *ngIf="!estadoMetodosDePago.completado" class="badge bg-light text-secondary">Pendiente</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <app-subir-archivo
+            *ngIf="estaActivo('metodosDePago')"
+            idInstancia="metodosDePago"
+            tipoArchivo="excel"
+            aceptarExtensiones=".xlsx"
+            [tamanoMaximoMB]="5"
+            [permitirMultiples]="true"
+            (archivosSeleccionados)="onArchivosSeleccionados('metodosDePago', $event)">
+          </app-subir-archivo>
+          <div *ngIf="estadoMetodosDePago.procesando" class="mt-2">
+            <div class="alert alert-info mb-0 small">
+              <i class="fas fa-spinner fa-spin"></i> Procesando archivo...
+            </div>
+          </div>
+          <div *ngIf="estadoMetodosDePago.error" class="mt-2">
+            <div class="alert alert-danger mb-0 small">
+              ❌ {{ estadoMetodosDePago.error }}
+            </div>
+          </div>
+          <button (click)="agregarAtbTemp('metodosDePago',estadoMetodosDePago.datosProcesados)">Agregar a temporal</button>
+          <div *ngIf="estadoMetodosDePago.completado && estadoMetodosDePago.datosProcesados?.length" class="mt-2">
+            <div class="alert alert-success mb-0 small">
+              <strong>✅ Archivo cargado:</strong> {{ estadoMetodosDePago.archivos[0].name }}
+              <br>
+              <small>{{ estadoMetodosDePago.datosProcesados?.length }} registros procesados</small>
+              <button (click)="descargarArchivoTrabajado('metodosDePago')">Ver archivo trabajado</button>
+              <button class="btn btn-outline-danger " (click)="reiniciarTipo('metodosDePago')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+              </svg>
+              </button>
+            </div>
+          </div>
+          <div *ngIf="!estaActivo('metodosDePago') && !estadoMetodosDePago.completado" class="text-center py-4">
+            <i class="fas fa-lock fa-2x text-muted mb-2"></i>
+            <p class="text-muted mb-0">⏳ Esperando a que se complete el archivo anterior</p>
+          </div>
+          
+          <div *ngIf="estadoMetodosDePago.completado && estadoMetodosDePago.archivos.length > 0" class="mt-2">
+            <div class="alert alert-success mb-0 small">
+              <strong>✅ Archivo cargado:</strong> 
+              {{ estadoMetodosDePago.archivos[0].name }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col">
+      <div class="card mb-3" [class.border-success]="estadoDomicilios.completado"
+           [class.border-secondary]="!estadoDomicilios.completado">
+        <div class="card-header" 
+             [class.bg-success]="estadoDomicilios.completado" 
+             [class.bg-primary]="!estadoDomicilios.completado" 
+             class="text-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">4️⃣ Domicilios fiscales</h5>
+            <span *ngIf="estadoDomicilios.completado" class="badge bg-light text-success">✓ Completado</span>
+            <span *ngIf="!estadoDomicilios.completado" class="badge bg-light text-secondary">Pendiente</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <app-subir-archivo
+            *ngIf="estaActivo('domicilios')"
+            idInstancia="domicilios"
+            tipoArchivo="excel"
+            aceptarExtensiones=".xlsx,.xlsm"
+            [tamanoMaximoMB]="20"
+            [permitirMultiples]="true"
+            (archivosSeleccionados)="onArchivosSeleccionados('domicilios', $event)">
+          </app-subir-archivo>
+          <div *ngIf="estadoDomicilios.procesando" class="mt-2">
+            <div class="alert alert-info mb-0 small">
+              <i class="fas fa-spinner fa-spin"></i> Procesando archivo...
+            </div>
+          </div>
+          <div *ngIf="estadoDomicilios.error" class="mt-2">
+            <div class="alert alert-danger mb-0 small">
+              ❌ {{ estadoDomicilios.error }}
+            </div>
+          </div>
+          <button (click)="agregarAtbTemp('domicilios',estadoDomicilios.datosProcesados)">Agregar a temporal</button>
+          <div *ngIf="estadoPersonas.completado && estadoDomicilios.datosProcesados?.length" class="mt-2">
+            <div class="alert alert-success mb-0 small">
+              <strong>✅ Archivo cargado:</strong> {{ estadoDomicilios.archivos[0].name }}
+              <br>
+              <small>{{ estadoDomicilios.datosProcesados?.length }} registros procesados</small>
+              <button (click)="descargarArchivoTrabajado('domicilios')">Ver archivo trabajado</button>
+              <button class="btn btn-outline-danger " (click)="reiniciarTipo('domicilios')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+              </svg>
+              </button>
+            </div>
+          </div>
+          <div *ngIf="!estaActivo('domicilios') && !estadoDomicilios.completado" class="text-center py-4">
+            <i class="fas fa-lock fa-2x text-muted mb-2"></i>
+            <p class="text-muted mb-0">⏳ Esperando a que se complete el archivo anterior</p>
+          </div>
+          
+          <div *ngIf="estadoDomicilios.completado && estadoDomicilios.archivos.length > 0" class="mt-2">
+            <div class="alert alert-success mb-0 small">
+              <strong>✅ Archivo cargado:</strong> 
+              {{ estadoDomicilios.archivos[0].name }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botones de acción -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body text-center">
+          <button class="btn btn-success btn-lg" 
+                  (click)="aceptarTodos()" 
+                  [disabled]="!todosCompletados">
+            <span *ngIf="todosCompletados">✅ Aceptar y Continuar</span>
+            <span *ngIf="!todosCompletados">
+              ⏳ Faltan {{ archivosFaltantes }} archivo(s) por cargar
+            </span>
+          </button>
+          
+          <button class="btn btn-outline-danger ms-2" 
+                  (click)="reiniciarTipo('todo')">
+            🔄 Reiniciar carga
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Resumen final (se muestra después de aceptar) -->
+  <div *ngIf="mostrarResumen" class="row mt-3">
+    <div class="col-12">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <h5 class="mb-3">✅ ¡Carga completada exitosamente!</h5>
+          <p class="mb-0">Todos los archivos han sido procesados correctamente.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+            <app-alerta #miAlerta></app-alerta>
+
+</div>

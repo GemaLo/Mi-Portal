@@ -1,0 +1,160 @@
+
+    <div class="fondo-animado">
+        <div class="circulo"></div>
+        <div class="circulo"></div>
+        <div class="circulo"></div>
+    </div>
+    <header class="header-login" >
+        <img src="assets/img/sspc_logo.webp" class="img-header" style="" alt="" srcset="" hidden = "true">
+    </header>
+    <div class="contenedor">
+        <div class="contenedor-titulo h-movil">
+            <div class="logo-republica-mexicana">
+                <img src="assets/img/Logo-gobierno-de-Mexico-1.webp" alt="">
+            </div>
+            <div>
+                <div class="wrapper-svg">
+                    <svg preserveAspectRatio="xMinYMid meet">
+                        <text class="text-seguridad" x="0" y="50">Seguridad</text>
+                    </svg>
+                </div>
+
+                <div class="t-secundario">
+                    Secretaría de Seguridad y Protección Ciudadana
+                </div>
+            </div>
+        </div>
+        <div class="contenedor-login">
+            <div class="tarjeta-login">
+                <div class="encabezado-login">
+                    <div class="">
+                        <div class="contenedor-titulo m-movil">
+                            <div class="logo-republica-mexicana">
+                                <img src="assets/img/sspc_logo.webp" alt="">
+                            </div>
+                            <div>
+                                <div class="wrapper-svg">
+                                    <svg preserveAspectRatio="xMinYMid meet">
+                                        <text class="text-seguridad" x="0" y="50">Seguridad</text>
+                                    </svg>
+                                </div>
+                
+                                <div class="t-secundario">
+                                    Secretaría de Seguridad y Protección Ciudadana
+                                </div>
+                            </div>
+                        </div>
+                            
+                        <img src="assets/img/sspc_logo.webp" class="img-logo h-movil" alt="Secretaría de Seguridad y Protección Ciudadana" height="" srcset="">
+                    </div>
+                    <h1 class="titulo-login">Mi Portal RRHH</h1>
+                    <p class="subtitulo-login">Portal de Recursos Humanos</p>
+                    <!-- <p class="subtitulo-login">Ingresa a tu cuenta institucional</p> -->
+                </div>
+
+                <form class="formulario-login" (ngSubmit)="onLogin()">
+                    <div class="grupo-formulario">
+                        <label for="usuario" class="etiqueta-formulario">Usuario</label>
+                        <div class="contenedor-input">
+                            <i class="fas fa-user icono-input"></i>
+                            <input type="email" 
+                            name="email" 
+                            [(ngModel)]="loginData.email" 
+                            class="input-formulario" 
+                            placeholder="Ingresa a tu cuenta institucional" 
+                            required>
+                        </div>
+                        <div class="mensaje-error" id="errorUsuario">El usuario es requerido</div>
+                    </div>
+
+                    <div class="grupo-formulario">
+                        <label for="contraseña" class="etiqueta-formulario">Contraseña</label>
+                        <div class="contenedor-input">
+                            <i class="fas fa-lock icono-input"></i>
+                            <input type="password" 
+                            name="password" 
+                            [(ngModel)]="loginData.password" 
+                            class="input-formulario" 
+                            placeholder="Ingresa tu contraseña" 
+                            required
+                            required>
+                        </div>
+                        <div class="mensaje-error" id="errorContraseña">La contraseña es requerida</div>
+                    </div>
+
+                    <!-- <div class="opciones-login">
+                        <div class="recordar-contraseña">
+                            <input type="checkbox" id="recordar">
+                            <label for="recordar">Recordar mi sesión</label>
+                        </div>
+                        <a href="#" class="enlace-olvidado">¿Olvidaste tu contraseña?</a>
+                    </div> -->
+
+                    <button class="boton-login">Iniciar Sesión</button>
+                </form>
+
+                <!-- <div class="pie-login">
+                    <p>¿No tienes una cuenta? <a href="#" class="enlace-registro">Solicitar acceso</a></p>
+                </div> -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.getElementById('formularioLogin').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const usuario = document.getElementById('usuario');
+            const contraseña = document.getElementById('contraseña');
+            const errorUsuario = document.getElementById('errorUsuario');
+            const errorContraseña = document.getElementById('errorContraseña');
+
+            let esValido = true;
+
+            // Validar usuario
+            if (usuario.value.trim() === '') {
+                usuario.classList.add('error');
+                errorUsuario.style.display = 'block';
+                esValido = false;
+            } else {
+                usuario.classList.remove('error');
+                usuario.classList.add('exito');
+                errorUsuario.style.display = 'none';
+            }
+
+            // Validar contraseña
+            if (contraseña.value.trim() === '') {
+                contraseña.classList.add('error');
+                errorContraseña.style.display = 'block';
+                esValido = false;
+            } else {
+                contraseña.classList.remove('error');
+                contraseña.classList.add('exito');
+                errorContraseña.style.display = 'none';
+            }
+
+            // Si es válido, simular envío
+            if (esValido) {
+                // Aquí iría la lógica real de autenticación
+                console.log('Formulario válido, enviando datos...');
+
+                // Efecto de éxito
+                const boton = document.querySelector('.boton-login');
+                boton.innerHTML = '<i class="fas fa-check"></i> Acceso Concedido';
+                boton.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+
+                setTimeout(() => {
+                    alert('Inicio de sesión exitoso (simulación)');
+
+                    // Limpiar formulario de spués del "envío"
+                    usuario.value = '';
+                    contraseña.value = '';
+                    usuario.classList.remove('exito');
+                    contraseña.classList.remove('exito');
+                    boton.innerHTML = 'Iniciar Sesión';
+                    boton.style.background = 'linear-gradient(135deg, var(--color-primario), var(--color-primario-claro))';
+                }, 1500);
+            }
+        });
+    </script>

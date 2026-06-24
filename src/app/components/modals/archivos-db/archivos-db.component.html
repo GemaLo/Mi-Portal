@@ -1,0 +1,137 @@
+<div class="card">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Archivos del Script</h5>
+      <button type="button" class="btn-close btn-close-white" (click)="cerrar.emit()" *ngIf="modoModal"></button>
+    </div>
+    
+    <div class="card-body">
+        <!-- Lista de archivos existentes --
+        <div *ngIf="archivos.length > 0" class="mb-3">
+            <h6>Archivos adjuntos ({{ archivos.length }})</h6>
+            <div class="list-group">
+            <div *ngFor="let archivo of archivos" class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="fs-5 me-2">
+                    {{ getIconoArchivo(archivo.tipoArchivo) }}
+                    </span>
+                    <strong>{{ archivo.nombreArchivo }}</strong>
+                    <br>
+                    <small class="text-muted">
+                    {{ formatBytes(archivo.tamanio) }} • 
+                    {{ archivo.fechaSubida | date:'dd/MM/yyyy HH:mm' }}
+                    </small>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-outline-danger me-1" (click)="eliminarArchivo(archivo.idArchivo)">Eliminar</button>
+                    <button class="btn btn-sm btn-outline-success" (click)="descargarArchivo(archivo.idArchivo)">Descargar</button>
+                </div>
+                </div>
+            </div>
+            </div>
+        </div>-->
+        
+        <div *ngIf="archivos.length === 0" class="alert alert-info">
+            No hay archivos adjuntos
+        </div>
+        
+        <!-- Subir nuevo archivo -->
+        <div class="mt-3">
+            <h6>Subir nuevo archivo</h6>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="form-check form-check-inline">
+                      <input type="checkbox" class="form-check-input" name="solicitudUsuario" id="solicitudUsuario" [(ngModel)]="solicitudUsuario">
+                      <label class="form-check-label" for="solicitudUsuario">Solicita usuario?</label>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nombre usuario</label>
+                    <input type="text" class="form-control" [(ngModel)]="usuarioSolicita" name="Nombre usuario"   (input)="onInputChange()"
+                           placeholder="Numero o Nombre de empleado ">
+                </div>
+                
+                <div id="fileInput_pdf" class="upload-area"
+                    (dragover)="onDragOver($event)"
+                    (dragleave)="onDragLeave($event)"
+                    (drop)="onDrop($event)">
+                <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                <h5>Arrastra y suelta aquí tu archivo</h5>
+                <p class="text-muted">o haz clic para seleccionar</p>
+                <input type="file" #fileInput  
+                        (change)="onFileSelected($event)"
+                        accept=".pdf" class="d-none" multiple>
+                <button type="button" class="btn btn-primary" (click)="fileInput.click()">
+                    Seleccionar Archivo
+                </button>
+                </div>
+
+                    <div class="col-md-4">
+                        <div class="form-check mt-2">
+                        <input type="checkbox" class="form-check-input" id="esPrincipal" [(ngModel)]="nuevoArchivoEsPrincipal">
+                        <label class="form-check-label" for="esPrincipal">Marcar como principal</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div *ngIf="progresoSubida > 0" class="mt-2">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped" [style.width.%]="progresoSubida">
+                        {{ progresoSubida }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    
+    <!-- Botón para ver PDF -->
+    <!-- <button class="btn btn-sm btn-info" (click)="verPDF(archivo)">
+      Ver PDF
+    </button> -->
+    <button type="button" class="btn btn-info btn-lg" (click)="mostrarPDF()" *ngIf ="btnVerPdf">Ver PDF</button>
+    <button type="button" class="btn btn-info btn-lg" (click)="cerrarPDF()" *ngIf ="btnCerrarPdf">Cerrar PDF</button>
+    <button type="button" class="btn btn-info btn-lg" (click)="cerrar.emit()" *ngIf ="btnAceptar">Aceptar</button>
+    <iframe *ngIf = "flagVerPdf"
+      [src]="pdfUrl"
+      width="100%"
+      height="800px"
+      style="border: none;">
+    </iframe>   
+    
+    <!-- Modal para mostrar PDF -->
+    <div class="modal fade" [class.show]="mostrarModalPDF" 
+         [style.display]="mostrarModalPDF ? 'block' : 'none'" 
+         tabindex="-1" style="background-color: rgba(0,0,0,0.8)">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-dark text-white">
+            <h5 class="modal-title">
+                {{ pdfTitulo }}
+            </h5>
+            <button type="button" class="btn-close btn-close-white" (click)="cerrarModalPDF()"></button>
+          </div>
+          <div class="modal-body p-0">
+            <!-- Visor de PDF embebido -->
+            <iframe *ngIf="pdfUrl" [src]="pdfUrl" 
+                    width="100%" height="600px" 
+                    frameborder="0" style="border: none;">
+            </iframe>
+            
+            <!-- Mensaje de error si no es PDF -->
+            <div *ngIf="!esPDF" class="alert alert-danger m-3">
+              Este archivo no es un PDF válido
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="cerrarModalPDF()">Cerrar</button>
+            <button type="button" class="btn btn-primary" (click)="descargarPDF()">
+              Descargar PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div *ngIf="mostrarModalPDF" class="modal-backdrop fade show"></div>
+</div>

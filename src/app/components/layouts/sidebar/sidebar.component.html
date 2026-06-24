@@ -1,0 +1,85 @@
+<div class="sidebar-container">
+  <!-- Logo -->
+  <div class="sidebar-header">
+    <div class="logo-rrhh">
+      <i class="fas fa-users-cog"></i>
+    </div>
+    <div class="logo-text" *ngIf="!isCollapsed">Mi Portal RH</div>
+  </div>
+
+  <!-- Menú Principal -->
+  <nav class="sidebar-nav">
+    <!-- Grupo Principal -->
+    <div class="menu-group" *ngIf="!isCollapsed">
+      <h4 class="menu-group-title">Principal</h4>
+      <ul class="menu-list">
+        <li *ngFor="let item of mainMenu" class="menu-item">
+          <a 
+            [routerLink]="item.route" 
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{exact: true}"
+            class="menu-link">
+            <i [class]="item.icon" class="menu-icon"></i>
+            <span class="menu-text" *ngIf="!isCollapsed">{{ item.title }}</span>
+            <span *ngIf="item.badge !== undefined && !isCollapsed" 
+                  class="badge" [ngClass]="getBadgeClass(item.badge)">
+              {{ item.badge }}
+            </span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Grupo Gestión (siempre visible) -->
+    <div class="menu-group">
+      <h4 class="menu-group-title" *ngIf="!isCollapsed">Gestión</h4>
+      <ul class="menu-list">
+        <li *ngFor="let item of gestionMenu" class="menu-item">
+          <a 
+            [routerLink]="item.route" 
+            routerLinkActive="active"
+            class="menu-link">
+            <i [class]="item.icon" class="menu-icon"></i>
+            <span class="menu-text" *ngIf="!isCollapsed">{{ item.title }}</span>
+            <span *ngIf="item.badge !== undefined && !isCollapsed" 
+                  class="badge" [ngClass]="getBadgeClass(item.badge)">
+              {{ item.badge }}
+            </span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Grupo Administración -->
+    <div class="menu-group" *ngIf="!isCollapsed">
+      <h4 class="menu-group-title">Administración</h4>
+      <ul class="menu-list">
+        <li *ngFor="let item of adminMenu" class="menu-item">
+          <a [routerLink]="item.route" routerLinkActive="active" class="menu-link">
+            <i [class]="item.icon" class="menu-icon"></i>
+            <span class="menu-text" *ngIf="!isCollapsed">{{ item.title }}</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a type="submit" (click)="onLogout()" class="menu-link">
+            <i [class]="" class="menu-icon"></i>
+            <span class="menu-text" *ngIf="!isCollapsed">Cerrar Sesión </span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <!-- Versión collapsed: solo iconos -->
+    <div class="menu-collapsed" *ngIf="isCollapsed">
+      <div *ngFor="let group of [mainMenu, gestionMenu, adminMenu]" 
+           class="collapsed-group">
+        <div *ngFor="let item of group" class="collapsed-item">
+          <a [routerLink]="item.route" routerLinkActive="active"
+             class="collapsed-link" [title]="item.title">
+            <i [class]="item.icon"></i>
+            <span *ngIf="item.badge" class="collapsed-badge">{{ item.badge }}</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+</div>

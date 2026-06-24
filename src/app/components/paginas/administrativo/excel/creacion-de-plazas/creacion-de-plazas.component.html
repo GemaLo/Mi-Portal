@@ -1,0 +1,1065 @@
+<!-- frontend/src/app/components/creacion-de-plazas/creacion-de-plazas.component.html -->
+<div class="creacion-plazas-container">
+  <!-- Header -->
+  <div class="header-admin">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <h1 class="h3 mb-0"><i class="fas fa-user-shield me-2"></i>Creación de plazas</h1>
+          <p class="mb-0">Gestión de plazas a crear</p>
+        </div>
+        <div class="col-md-6 text-end">
+          <button class="btn btn-light" (click)="verModalCatalogos()">
+            <i class="fas fa-save me-2"></i>Catalogos
+          </button>
+          <button class="btn btn-light" (click)="downloadExcel(false)">
+            <i class="fas fa-save me-2"></i>Descargar layout
+          </button>
+          <button class="btn btn-light" (click)="downloadExcelLayoutCargarTabla(true)">
+            <i class="fas fa-save me-2"></i>Descargar layout Cargar tabla
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-12">
+        <!-- Card de carga -->
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Cargar Archivo Excel</h5>
+          </div>
+          <div class="card-body">
+            <select  name="organo"  id="organo"  class="form-select form-select-sm" [(ngModel)]="organoSeleccionado" [disabled]=organoSelect>
+              <option value="SC">SC</option>
+              <option value="SPF">SPF</option>
+              <option value="PRS">PRS</option>
+            </select>
+          </div>
+          <div class="card-body">
+            
+            <div class="form-check form-check-inline">
+              <input type="checkbox" class="form-check-input" name="agregarSolicitud" id="agregarSolicitud" [(ngModel)]="agregarSolicitud">
+              <label class="form-check-label" for="agregarSolicitud">Solicitud</label>
+            </div>
+            <br>
+            <div class="" *ngIf="agregarSolicitud == true">
+              <button type="button" class="btn btn-info btn-lg" (click)="abrirGestorArchivos()">
+                📎 Gestionar Archivos del Script
+                <span class="badge bg-dark ms-2" *ngIf="archivosAdjuntos > 0">{{ archivosAdjuntos }}</span>
+              </button>
+              <small class="text-muted d-block mt-1">
+                Sube tu documento de solicitud.
+              </small>
+              <div class="modal fade" [class.show]="mostrarModalArchivos" 
+                    [style.display]="mostrarModalArchivos ? 'block' : 'none'" 
+                    tabindex="-1" style="background-color: rgba(0,0,0,0.5)">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                  <div class="modal-content">
+                    <app-archivos-db 
+                    [idVersion]="idVersionTemporal" 
+                    [modoModal]="true"
+                    (cerrar)="cerrarGestorArchivos()"
+                    (archivosActualizados)="onArchivosActualizados($event)">
+                    </app-archivos-db>
+                  </div>
+                </div>
+              </div>
+            
+              <div *ngIf="mostrarModalArchivos" class="modal-backdrop fade show"></div>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Radio buttons para régimen -->
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="radioRegimen" 
+                     id="inlineRadio1" value="62" [(ngModel)]="tipoRegimen" checked>
+              <label class="form-check-label" for="inlineRadio1">Eventual (61)</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="radioRegimen" 
+                     id="inlineRadio2" value="61" [(ngModel)]="tipoRegimen">
+              <label class="form-check-label" for="inlineRadio2">Permanente (62)</label>
+            </div>
+          </div>
+
+          <div class="card-body ">
+            <!-- Área de subida -->
+            <div id="uploadArea" class="upload-area"
+                 (dragover)="onDragOver($event)"
+                 (dragleave)="onDragLeave($event)"
+                 (drop)="onDrop($event)">
+              <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+              <h5>Arrastra y suelta tu archivo Excel aquí</h5>
+              <p class="text-muted">o haz clic para seleccionar</p>
+              <input type="file" #excelFileInput 
+                     (change)="onFileSelected($event)"
+                     accept=".xlsx,.xls" class="d-none" multiple>
+              <button type="button" class="btn btn-primary" (click)="excelFileInput.click()">
+                Seleccionar Archivo
+              </button>
+            </div>
+            
+            <!-- Lista de archivos -->
+            <div id="fileList" class="mt-3">
+              <div *ngFor="let archivo of archivosCargados; let i = index" 
+                   class="alert" 
+                   [ngClass]="{
+                     'alert-secondary': !getEstadoArchivo(i),
+                     'alert-success': getEstadoArchivo(i) === 'success',
+                     'alert-danger': getEstadoArchivo(i) === 'error'
+                   }"
+                   [attr.data-index]="i"
+                   [attr.data-field]="archivo.name">
+                <span style="cursor:pointer" (click)="mostrarArchivo(i)">
+                  📄 {{archivo.name}}
+                </span>
+                <button class="btn btn-sm btn-danger ms-2" 
+                        (click)="eliminarArchivoAlert(i)">
+                  Eliminar
+                </button>
+              </div>
+            </div>
+            <div *ngIf="isLoading" class="progress">
+              <div class="progress-bar" role="progressbar" [style.width.%]="porcentajeCargaExcel" [attr.aria-valuenow]="porcentajeCargaExcel" aria-valuemin="0" aria-valuemax="100">{{porcentajeCargaExcel.toFixed(1)}}%</div>
+            </div>
+            <!-- Botón procesar -->
+            <button id="processBtn" class="btn btn-primary w-100 mt-3" 
+                    (click)="processFiles()" [disabled]="isLoading">
+              <span *ngIf="!isLoading">Procesar Archivo</span>
+              <span *ngIf="isLoading">Procesando...</span>
+              
+              <div *ngIf="isLoading" class="spinner-border spinner-border-sm ms-2 d-inline-block" role="status">
+                <span class="visually-hidden">Procesando...</span>
+              </div>
+            </button>
+            <app-alerta #miAlerta></app-alerta>
+            <button (click)="enviarTemporal()">Agregar a tabla temporal</button>
+            <button (click)="agregarPazasAtbTemp()">Agregar datos a tabla temporal</button>
+            <!-- Información de tiempo -->
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-clock me-2"></i>
+                  <div>
+                    <small class="text-muted d-block">Tiempo transcurrido</small>
+                    <span class="fs-5">{{tiempoTranscurrido}}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-check-circle me-2"></i>
+                  <div>
+                    <small class="text-muted d-block">Tiempo total</small>
+                    <span class="fs-5">{{tiempoTotal || '--:--'}}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Velocidad de procesamiento -->
+            <!-- <div class="mt-2 text-center" *ngIf="velocidadProcesamiento">
+              <small class="text-muted">
+                <i class="bi bi-speedometer2 me-1"></i>
+                Velocidad: {{velocidadProcesamiento}} filas/segundo
+              </small>
+            </div> -->
+
+            <!-- Botón agregar plazas (oculto inicialmente) -->
+            <div id="centrarBtnAddPlaza" class="centrar-btn-add-plaza mt-3" 
+                 [class.d-none]="!showAddPlazas">
+              <button id="toggleColumns" class="btn btn-success w-100" (click)="agregarPlazas()">
+                <i class="fas fa-columns"></i> Agregar Plazas
+              </button>
+            </div>
+            
+            <!-- Botones de acción -->
+            <div class="btns_ver-arr mt-3 d-flex justify-content-between">
+              <button class="btn btn-outline-primary" (click)="verListadoArchivos()">
+                Ver Resumen por Archivo
+              </button>
+              <button id="downloadBtn" class="btn btn-outline-success" 
+                      (click)="verDtsPdf()" [disabled]="isLoadingDownload">
+                <span *ngIf="!isLoadingDownload">Descargar Excel</span>
+                <span *ngIf="isLoadingDownload">Generando...</span>
+                <div *ngIf="isLoadingDownload" class="spinner-border spinner-border-sm ms-2 d-inline-block" role="status">
+                  <span class="visually-hidden">Generando...</span>
+                </div>
+              </button>
+            </div>
+            
+            <!-- Loading -->
+            <div *ngIf="isLoadingDownload" class="loading mt-3 text-center">
+              <p>Generando archivo Excel, por favor espere...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Diálogo de confirmación -->
+        <div id="dialog" class="dialog-overlay" [style.display]="showDialogModal ? 'flex' : 'none'">
+          <div class="dialog-box">
+            <p id="dialog-message">{{dialogConfig.message}}</p>
+            <p id="mensajeValidacion">{{dialogConfig.validacion}}</p>
+            <p id="mensajePregunta">{{dialogConfig.pregunta}}</p>
+            <input *ngIf="dialogConfig.showInput" type="text" id="nuevoValorSug" 
+                   [(ngModel)]="dialogConfig.inputValue" class="form-control mt-2">
+            <div class="dialog-buttons mt-3">
+              <button id="dialog-ok" class="btn btn-primary" 
+                      (click)="dialogAceptar()">
+                Aceptar
+              </button>
+              <button id="dialog-cancel" class="btn btn-secondary" 
+                      (click)="dialogCancelar()">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modales -->
+        <!-- Modal de resumen -->
+        <div class="modal fade" id="modalResumen" [class.show]="showResumenModal" [style.display]="showResumenModal ? 'block' : 'none'">
+          <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Resumen General por Archivo</h5>
+                <button type="button" class="btn-close" (click)="cerrarModalResumen()"></button>
+              </div>
+          
+              <div class="modal-body" id="contenidoResumen">
+                <div *ngFor="let fileName of getArchivosProcesados()" class="mb-4 border rounded p-3">
+                  <h5 class="text-primary mb-3">📄 {{fileName}}</h5>
+                  <div class="">
+                    <table class="table table-sm table-bordered">
+                      <thead>
+                        <tr>
+                          <th *ngFor="let header of tableHeaders" 
+                              [attr.data-field]="header.key"
+                              (click)="sortTable(header.key)"
+                              style="cursor: pointer;"
+                              [title]="'Click para ordenar'"
+                              [style.min-width]="header.minWidth ? header.minWidth + 'px' : 'auto'">
+                            {{header.value}}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let item of resultadosPorArchivo[fileName]">
+                          <td>{{item.fecha_inicio || '-'}}</td>
+                          <td>{{item.fecha_fin || '-'}}</td>
+                          <td>{{item.plaza || '-'}}</td>
+                          <td>{{item.unidad || '-'}}</td>
+                          <td>{{item.codigo_presupuestal || '-'}}</td>
+                          <td>{{item.consecutivo_plaza || '-'}}</td>
+                          <td>{{item.codigo_federal || '-'}}</td>
+                          <td>{{item.unidad_2 || '-'}}</td>
+                          <td>{{item.clave_programatica || '-'}}</td>
+                          <td>{{item.nomina || '-'}}</td>
+                          <td>{{item.base_salario || '-'}}</td>
+                          <td>{{item.nivel || '-'}}</td>
+                          <td>{{item.cargo_comision || '-'}}</td>
+                          <td>{{item.regimen || '-'}}</td>
+                          <td>{{item.codigo_inteligente || '-'}}</td>
+                          <td>{{item.ramo || '-'}}</td>
+                          <td>{{item.unidad_3 || '-'}}</td>
+                          <td>{{item.zona_economica || '-'}}</td>
+                          <td>{{item.referencia_tabular || '-'}}</td>
+                          <td>{{item.consecutivo_codigo_inteligente || '-'}}</td>
+                          <td>{{item.tipo_puesto || '-'}}</td>
+                          <td>{{item.tipo_ocupacion || '-'}}</td>
+                          <td>{{item.tipo_funcion || '-'}}</td>
+                          <td>{{item.denominacion || '-'}}</td>
+                          <td>{{item.tipo_estrategico || '-'}}</td>
+                          <td>{{item.codigo_inteligente_jefe || '-'}}</td>
+                          <td>{{item.estado || '-'}}</td>
+                          <td>{{item.comentario || '-'}}</td>
+                          <td>{{item.tipo_plaza || '-'}}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+          
+              <div class="modal-footer">
+                <button class="btn btn-secondary" (click)="cerrarModalResumen()">Cerrar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal de catálogos -->
+        <div class="modal fade" id="modalCatalogos" [class.show]="showCatalogosModal" [style.display]="showCatalogosModal ? 'block' : 'none'">
+          <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Catalogos</h5>
+                <button type="button" class="btn-close" (click)="showCatalogosModal = false"></button>
+              </div>
+          
+              <div class="modal-body">
+                <!-- Navegación por pestañas -->
+                <ul class="nav nav-tabs mb-4" id="empleadoTabs" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-bs-target="#datos-basicos" type="button">
+                      <i class="fas fa-user me-2"></i>Datos Básicos
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-target="#agregar-catalogo" type="button">
+                      <i class="fas fa-cog me-2"></i>Agregar catálogo
+                    </button>
+                  </li>
+                </ul>
+      
+                <div class="tab-content" id="empleadoTabsContent">
+                  <!-- Pestaña 1: Datos Básicos -->
+                  <div class="tab-pane fade show active" id="datos-basicos">
+                    <p>Información de catálogos básicos...</p>
+                  </div>
+                  
+                  <!-- Pestaña 2: Agregar catálogo -->
+                  <div class="tab-pane fade" id="agregar-catalogo">
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="nombre" class="form-label required-field">Nombre del Catálogo</label>
+                        <input type="text" class="form-control" id="nombreCatalogo" 
+                               [(ngModel)]="nuevoCatalogo.nombre"
+                               placeholder="Ingrese el nombre del catálogo">
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="nombreHoja" class="form-label required-field">Nombre de hoja</label>
+                        <input type="text" class="form-control" id="nombreHojaCatalogo" 
+                               [(ngModel)]="nuevoCatalogo.nombreHoja"
+                               placeholder="Ingrese el nombre de hoja">
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-12 mb-3">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcionCatalogo" 
+                                  [(ngModel)]="nuevoCatalogo.descripcion"
+                                  rows="3" placeholder="Descripción del catálogo"></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="modal-footer">
+                  <button id="guardarCatalogo" class="btn btn-success" (click)="agregarCatalogo()">Guardar</button>
+                  <button class="btn btn-secondary" (click)="showCatalogosModal = false">Cerrar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección de resultados -->
+        <div *ngIf="showResults" class="mt-4" id="resultsSection">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0">Resultados del Procesamiento</h5>
+              <div>
+                <span class="badge bg-dark">Total: {{estadisticas.total}}</span>
+                <span class="badge bg-success ms-1">Válidos: {{estadisticas.validos}}</span>
+                <span class="badge bg-danger ms-1">Inválidos: {{estadisticas.invalidos}}</span>
+                <span class="badge ms-1" style="background-color: #e5e2e3; color:#6c6c6c">Repetidos: {{estadisticas.repetidos}}</span>
+                <span class="badge bg-primary ms-1" *ngIf="estadisticas.existentes != 0">Existentes: {{estadisticas.existentes}}</span>
+                <span class="badge bg-info ms-1">Archivos: {{estadisticas.totalArchivos}}</span>
+              </div>
+            </div>
+            
+            <div class="card-body">
+              <!-- Filtros -->
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <input type="text" id="searchInput" class="form-control" 
+                         [(ngModel)]="searchTerm" (input)="aplicarFiltros()"
+                         placeholder="Buscar en todos los campos...">
+                </div>
+                <div class="col-md-2">
+                  <select id="statusFilter" class="form-select"
+                          [(ngModel)]="statusFilter" (change)="aplicarFiltros()"> 
+                    <option value="">Todos los estados</option>
+                    <option value="valid">Válidos</option>
+                    <option value="invalid">Inválidos</option>
+                    <option value="repeat">Repetidos</option>
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <label for="tipoPlazaFilter" class="form-label required-field">Regimen</label>
+
+                  <select id="tipoPlazaFilter" class="form-select"
+                          [(ngModel)]="tipoPlazaFilter" (change)="aplicarFiltros()">
+                    <option value="">Todos los tipos</option>
+                    <option value="permanente">Permanente</option>
+                    <option value="eventual">Eventual</option>
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <select id="cantidadRegistros" class="form-select"
+                          [(ngModel)]="cantidadRegistros" (change)="aplicarFiltros()">
+                    <option value="">Mostrar</option>
+                    <option value="15">15</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                    <option value="300">300</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Tabla de resultados -->
+              <div class="table-responsive" style="max-height: 600px; overflow-y: auto; overflow-x: auto;">
+                <table class="table-striped table-bordered results-table" style="border-color: #fff">
+                  <thead class="sticky-top bg-light">
+                    <tr id="tableHeaders">
+                      <!-- Headers en orden específico -->
+                      <th *ngFor="let header of tableHeaders" 
+                          [attr.data-field]="header.key"
+                          (click)="sortTable(header.key)"
+                          style="cursor: pointer;"
+                          [title]="'Click para ordenar'"
+                          [style.min-width]="header.minWidth ? header.minWidth + 'px' : 'auto'">
+                        {{header.value}}
+                      </th>
+                    </tr>
+                  </thead>
+                  
+                  <tbody id="resultsTableBody">
+                    <!-- Fila para cada registro en la página actual -->
+                    <tr *ngFor="let item of getPageData(); let i = index"
+                        [attr.data-index]="i"
+                        [attr.data-file]="archivoActivoTabla"
+                        [class.bkg-verde]="item.estado === 'VÁLIDO'"
+                        [class.bkg-amarillo]="item.estado === 'INVÁLIDO'"
+                        [class.bkg-azul]="item.estado === 'EXISTENTE'"
+                        [class.bkg-repetido]="item.estado === 'REPETIDO'">
+                      
+                      <!-- Fecha Inicio -->
+                      <td class="align-middle text-nowrap">
+                        {{item.fecha_inicio || '-'}}
+                      </td>
+                      
+                      <!-- Fecha Fin -->
+                      <td class="align-middle text-nowrap">
+                        {{item.fecha_fin || '-'}}
+                      </td>
+                      
+                      <!-- Plaza -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.plaza)"
+                          [title]="getValorLimpio(item.plaza)">
+                        <!-- Textarea editable solo para REPETIDO -->
+                        <textarea *ngIf="item.estado === 'REPETIDO'"
+                                  class="celda-editable"
+                                  [class.bkg-rojo]="celdaTieneError(item.plaza)"
+                                  [value]="getValorLimpio(item.plaza)"
+                                  (blur)="onBlurCampo($event, i, 'plaza', item)"
+                                  (keydown.enter)="onEnterCampo($any($event))"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="plaza"
+                                  [attr.data-orgvalue]="getValorLimpio(item.plaza)"
+                                  rows="1"></textarea>
+                        <span *ngIf="item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.plaza)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Unidad -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.unidad) || item.estado === 'REPETIDO'">
+                        <textarea *ngIf="celdaTieneError(item.unidad) || item.estado === 'REPETIDO'"
+                                  class="celda-editable"
+                                  [class.bkg-rojo]="celdaTieneError(item.unidad)"
+                                  [value]="getValorLimpio(item.unidad)"
+                                  (blur)="onBlurCampo($event, i, 'unidad', item)"
+                                  (keydown.enter)="onEnterCampo($any($event))"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="unidad"
+                                  [attr.data-orgvalue]="getValorLimpio(item.unidad)"
+                                  rows="1"></textarea>
+                        <span *ngIf="!celdaTieneError(item.unidad) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.unidad)}}
+                        </span>
+                      </td>
+
+                      <!-- Código Presupuestal -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.codigo_presupuestal) || item.estado === 'REPETIDO'">
+                        <textarea *ngIf="celdaTieneError(item.codigo_presupuestal) || item.estado === 'REPETIDO'"
+                                  class="celda-editable"
+                                  [class.bkg-rojo]="celdaTieneError(item.codigo_presupuestal)"
+                                  [value]="getValorLimpio(item.codigo_presupuestal)"
+                                  (blur)="onBlurCampo($event, i, 'codigo_presupuestal', item)"
+                                  (keydown.enter)="onEnterCampo($any($event))"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="codigo_presupuestal"
+                                  [attr.data-orgvalue]="getValorLimpio(item.codigo_presupuestal)"
+                                  rows="1"></textarea>
+                        <span *ngIf="!celdaTieneError(item.codigo_presupuestal) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.codigo_presupuestal)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Consecutivo Plaza -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.consecutivo_plaza) || item.estado === 'REPETIDO'">
+                        <textarea *ngIf="celdaTieneError(item.consecutivo_plaza) || item.estado === 'REPETIDO'"
+                                  class="celda-editable"
+                                  [class.bkg-rojo]="celdaTieneError(item.consecutivo_plaza)"
+                                  [value]="getValorLimpio(item.consecutivo_plaza)"
+                                  (blur)="onBlurCampo($event, i, 'consecutivo_plaza', item)"
+                                  (keydown.enter)="onEnterCampo($any($event))"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="consecutivo_plaza"
+                                  [attr.data-orgvalue]="getValorLimpio(item.consecutivo_plaza)"
+                                  rows="1"></textarea>
+                        <span *ngIf="!celdaTieneError(item.consecutivo_plaza) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.consecutivo_plaza)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Código Federal -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.codigo_federal) || item.estado === 'REPETIDO'">
+                        <textarea *ngIf="celdaTieneError(item.codigo_federal) || item.estado === 'REPETIDO'"
+                                  class="celda-editable"
+                                  [class.bkg-rojo]="celdaTieneError(item.codigo_federal)"
+                                  [value]="getValorLimpio(item.codigo_federal)"
+                                  (blur)="onBlurCampo($event, i, 'codigo_federal', item)"
+                                  (keydown.enter)="onEnterCampo($any($event))"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="codigo_federal"
+                                  [attr.data-orgvalue]="getValorLimpio(item.codigo_federal)"
+                                  rows="1"></textarea>
+                        <span *ngIf="!celdaTieneError(item.codigo_federal) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.codigo_federal) || '-'}}
+                        </span>
+                      </td>
+                      
+                      <!-- Unidad 2 (con select) --
+                      <td class="celda-info align-middle" [class.bkg-rojo]="celdaTieneError(item.unidad_2) || item.estado === 'REPETIDO'">
+                        <ng-container *ngIf="celdaTieneError(item.unidad_2) || item.estado === 'REPETIDO'">
+                          <select class="form-select form-select-sm"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="unidad_2"
+                                  [attr.data-orgvalue]="getValorLimpio(item.unidad_2)"
+                                  (change)="onSelectChange($event, i, 'unidad_2', item)">
+                            <option value="">-- Selecciona --</option>
+                            <option *ngFor="let org of organizaciones" [value]="org.name"
+                                    [selected]="org.name === getValorLimpio(item.unidad_2)">
+                              {{org.name}}
+                            </option>
+                          </select>
+                        </ng-container>
+                        <span *ngIf="!celdaTieneError(item.unidad_2) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.unidad_2)}}
+                        </span>
+                      </td>-->
+                      
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.unidad_2) || item.estado === 'REPETIDO'">
+                          <ng-container *ngIf="celdaTieneError(item.unidad_2) || item.estado === 'REPETIDO'">
+                          <!-- Mostrar loading si está cargando el catálogo -->
+                          <div *ngIf="celdaTieneError(item.unidad_2) && !getOpcionesUnidad2(item)?.length" 
+                              class="text-center">
+                              <div class="spinner-border spinner-border-sm" role="status">
+                              <span class="visually-hidden">Cargando...</span>
+                              </div>
+                          </div>
+                          
+                          <select *ngIf="(celdaTieneError(item.unidad_2) && getOpcionesUnidad2(item)?.length) || item.estado === 'REPETIDO'"
+                                  class="form-select form-select-sm"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="unidad_2"
+                                  [attr.data-orgvalue]="getValorLimpio(item.unidad_2)"
+                                  (change)="onSelectChange($event, i, 'unidad_2', item)">
+                              <option value="">-- Selecciona --</option>
+                              <option *ngFor="let org of getOpcionesUnidad2(item)"
+                                      [value]="org.organization_id"
+                                      [selected]="org.name === getValorLimpio(item.unidad_2)">
+                              {{org.name}}
+                              </option>
+                          </select>
+                          </ng-container>
+                          <span *ngIf="!celdaTieneError(item.unidad_2) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.unidad_2)}}
+                          </span>
+                      </td>
+                      
+                      <!-- Clave Programática -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.clave_programatica) || item.estado === 'REPETIDO'">
+                        <textarea *ngIf="celdaTieneError(item.clave_programatica) || item.estado === 'REPETIDO'"
+                                  class="celda-editable"
+                                  [class.bkg-rojo]="celdaTieneError(item.clave_programatica)"
+                                  [value]="getValorLimpio(item.clave_programatica)"
+                                  (blur)="onBlurCampo($event, i, 'clave_programatica', item)"
+                                  (keydown.enter)="onEnterCampo($any($event))"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="clave_programatica"
+                                  [attr.data-orgvalue]="getValorLimpio(item.clave_programatica)"
+                                  rows="1"></textarea>
+                        <span *ngIf="!celdaTieneError(item.clave_programatica) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.clave_programatica)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Nómina (con select) -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.nomina) || item.estado === 'REPETIDO'">
+                        <ng-container *ngIf="celdaTieneError(item.nomina) || item.estado === 'REPETIDO'">
+                          <select class="form-select form-select-sm"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="nomina"
+                                  [attr.data-orgvalue]="getValorLimpio(item.nomina)"
+                                  (change)="onSelectChange($event, i, 'nomina', item)">
+                            <option value="">-- Selecciona --</option>
+                            <option *ngFor="let nom of catalogosSelect?.['nomina'] || []"
+                                    [value]="nom.value"
+                                    [selected]="nom.value === getValorLimpio(item.nomina)">
+                              {{nom.text}}
+                            </option>
+                          </select>
+                        </ng-container>
+                        <span *ngIf="!celdaTieneError(item.nomina) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.nomina)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Base Salario -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.base_salario) || item.estado === 'REPETIDO'">
+
+                        <ng-container *ngIf="celdaTieneError(item.base_salario) || item.estado === 'REPETIDO'">
+                          <select class="form-select form-select-sm"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="base_salario"
+                                  [attr.data-orgvalue]="getValorLimpio(item.base_salario)"
+                                  (change)="onSelectChange($event, i, 'base_salario', item)">
+                            <option value="">-- Selecciona --</option>
+                            <option *ngFor="let reg of catalogosSelect?.['base_salario'] || []"
+                                    [value]="reg.value"
+                                    [selected]="reg.value === getValorLimpio(item.base_salario)">
+                              {{reg.text}}
+                            </option>
+                          </select>
+                        </ng-container>
+                        
+                        <span *ngIf="!celdaTieneError(item.base_salario) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.base_salario)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Nivel
+
+                      <td class="celda-info align-middle"
+                            [class.bkg-rojo]="celdaTieneError(item.nivel) || item.estado === 'REPETIDO'">
+                            <ng-container *ngIf="celdaTieneError(item.nivel) || item.estado === 'REPETIDO'">
+                            <div *ngIf="celdaTieneError(item.nivel) && !getOpcionesNivel(item)?.length" 
+                                class="text-center">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                                </div>
+                            </div>
+                            <select *ngIf="(celdaTieneError(item.nivel) && getOpcionesNivel(item)?.length) || item.estado === 'REPETIDO'"
+                                    class="form-select form-select-sm"
+                                    [attr.data-index]="getGlobalIndex(i)"
+                                    data-field="nivel"
+                                    [attr.data-orgvalue]="getValorLimpio(item.nivel)"
+                                    (change)="onSelectChange($event, i, 'nivel', item)">
+                                <option value="">-- Selecciona --</option>
+                                <option *ngFor="let org of getOpcionesNivel(item)"
+                                        [value]="org.grade_id"
+                                        [selected]="org.name === getValorLimpio(item.nivel)">
+                                {{org.name}}
+                                </option>
+                            </select>
+                            </ng-container>
+                            <span *ngIf="!celdaTieneError(item.nivel) && item.estado !== 'REPETIDO'">
+                            {{getValorLimpio(item.nivel)}}
+                            </span>
+                        </td>-->
+                        <td class="celda-info align-middle" [class.bkg-rojo]="celdaTieneError(item.nivel) || item.estado === 'REPETIDO'">
+                            <ng-container *ngIf="celdaTieneError(item.nivel) || item.estado === 'REPETIDO'">
+                              <!-- Loading state -->
+                              <div *ngIf="isLoadingCatalogos && !getOpcionesNivel(item)?.length" 
+                                   class="text-center">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                  <span class="visually-hidden">Cargando...</span>
+                                </div>
+                              </div>
+                              
+                              <!-- Select cuando ya tenemos datos -->
+                              <select *ngIf="getOpcionesNivel(item)?.length && !isLoadingCatalogos"
+                                      class="form-select form-select-sm"
+                                      [attr.data-index]="getGlobalIndex(i)"
+                                      data-field="nivel"
+                                      [attr.data-orgvalue]="getValorLimpio(item.nivel)"
+                                      (change)="onSelectChange($event, i, 'nivel', item)">
+                                <option value="">-- Selecciona --</option>
+                                <option *ngFor="let org of getOpcionesNivel(item); 
+                                 trackBy: trackByGradeId"
+                                        [value]="org.grade_id"
+                                        [selected]="org.name === getValorLimpio(item.nivel)">
+                                  {{org.name}}
+                                </option>
+                              </select>
+                              
+                            </ng-container>
+                            <!-- Texto normal -->
+                            <span *ngIf="!celdaTieneError(item.nivel) && item.estado !== 'REPETIDO'">
+                              {{getValorLimpio(item.nivel)}}
+                            </span>
+                          </td>
+                      
+                      
+                      <!-- Cargo Comisión -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.cargo_comision) || item.estado === 'REPETIDO'">
+                        <textarea *ngIf="celdaTieneError(item.cargo_comision) || item.estado === 'REPETIDO'"
+                                  class="celda-editable"
+                                  [class.bkg-rojo]="celdaTieneError(item.cargo_comision)"
+                                  [value]="getValorLimpio(item.cargo_comision)"
+                                  (blur)="onBlurCampo($event, i, 'cargo_comision', item)"
+                                  (keydown.enter)="onEnterCampo($any($event))"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="cargo_comision"
+                                  [attr.data-orgvalue]="getValorLimpio(item.cargo_comision)"
+                                  rows="1"></textarea>
+                        <span *ngIf="!celdaTieneError(item.cargo_comision) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.cargo_comision)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Régimen (con select) -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.regimen) || item.estado === 'REPETIDO'">
+                        <ng-container *ngIf="celdaTieneError(item.regimen) || item.estado === 'REPETIDO'">
+                          <select class="form-select form-select-sm"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="regimen"
+                                  [attr.data-orgvalue]="getValorLimpio(item.regimen)"
+                                  (change)="onSelectChange($event, i, 'regimen', item)">
+                            <option value="">-- Selecciona --</option>
+                            <option *ngFor="let reg of catalogosSelect?.['regimen'] || []"
+                                    [value]="reg.value"
+                                    [selected]="reg.value === getValorLimpio(item.regimen)">
+                              {{reg.value}} - {{reg.text}}
+                            </option>
+                          </select>
+                        </ng-container>
+                        <span *ngIf="!celdaTieneError(item.regimen) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.regimen)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Código Inteligente -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.codigo_inteligente)"
+                          [title]="getValorLimpio(item.codigo_inteligente)">
+                        {{getValorLimpio(item.codigo_inteligente)}}
+                      </td>
+                      
+                      <!-- Ramo -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.ramo) || item.estado === 'REPETIDO'">
+                        <textarea *ngIf="celdaTieneError(item.ramo) || item.estado === 'REPETIDO'"
+                                  class="celda-editable"
+                                  [class.bkg-rojo]="celdaTieneError(item.ramo)"
+                                  [value]="getValorLimpio(item.ramo)"
+                                  (blur)="onBlurCampo($event, i, 'ramo', item)"
+                                  (keydown.enter)="onEnterCampo($any($event))"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="ramo"
+                                  [attr.data-orgvalue]="getValorLimpio(item.ramo)"
+                                  rows="1"></textarea>
+                        <span *ngIf="!celdaTieneError(item.ramo) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.ramo)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Unidad 3 -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.unidad_3) || item.estado === 'REPETIDO'">
+                        <textarea *ngIf="celdaTieneError(item.unidad_3) || item.estado === 'REPETIDO'"
+                                  class="celda-editable"
+                                  [class.bkg-rojo]="celdaTieneError(item.unidad_3)"
+                                  [value]="getValorLimpio(item.unidad_3)"
+                                  (blur)="onBlurCampo($event, i, 'unidad_3', item)"
+                                  (keydown.enter)="onEnterCampo($any($event))"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="unidad_3"
+                                  [attr.data-orgvalue]="getValorLimpio(item.unidad_3)"
+                                  rows="1"></textarea>
+                        <span *ngIf="!celdaTieneError(item.unidad_3) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.unidad_3)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Zona Económica (con select) -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.zona_economica) || item.estado === 'REPETIDO'">
+                        <ng-container *ngIf="celdaTieneError(item.zona_economica) || item.estado === 'REPETIDO'">
+                          <select class="form-select form-select-sm"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="zona_economica"
+                                  [attr.data-orgvalue]="getValorLimpio(item.zona_economica)"
+                                  (change)="onSelectChange($event, i, 'zona_economica', item)">
+                            <option value="">-- Selecciona --</option>
+                            <option *ngFor="let zona of catalogosSelect?.['zona_economica'] || []"
+                                    [value]="zona.value"
+                                    [selected]="zona.value === getValorLimpio(item.zona_economica)">
+                              {{zona.value}} - {{zona.text}}
+                            </option>
+                          </select>
+                        </ng-container>
+                        <span *ngIf="!celdaTieneError(item.zona_economica) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.zona_economica)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Referencia Tabular -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.referencia_tabular) || item.estado === 'REPETIDO'">
+                        <textarea *ngIf="celdaTieneError(item.referencia_tabular) || item.estado === 'REPETIDO'"
+                                  class="celda-editable"
+                                  [class.bkg-rojo]="celdaTieneError(item.referencia_tabular)"
+                                  [value]="getValorLimpio(item.referencia_tabular)"
+                                  (blur)="onBlurCampo($event, i, 'referencia_tabular', item)"
+                                  (keydown.enter)="onEnterCampo($any($event))"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="referencia_tabular"
+                                  [attr.data-orgvalue]="getValorLimpio(item.referencia_tabular)"
+                                  rows="1"></textarea>
+                        <span *ngIf="!celdaTieneError(item.referencia_tabular) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.referencia_tabular)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Consecutivo Código Inteligente -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.consecutivo_codigo_inteligente) || item.estado === 'REPETIDO'">
+                        <textarea *ngIf="celdaTieneError(item.consecutivo_codigo_inteligente) || item.estado === 'REPETIDO'"
+                                  class="celda-editable"
+                                  [class.bkg-rojo]="celdaTieneError(item.consecutivo_codigo_inteligente)"
+                                  [value]="getValorLimpio(item.consecutivo_codigo_inteligente)"
+                                  (blur)="onBlurCampo($event, i, 'consecutivo_codigo_inteligente', item)"
+                                  (keydown.enter)="onEnterCampo($any($event))"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="consecutivo_codigo_inteligente"
+                                  [attr.data-orgvalue]="getValorLimpio(item.consecutivo_codigo_inteligente)"
+                                  rows="1"></textarea>
+                        <span *ngIf="!celdaTieneError(item.consecutivo_codigo_inteligente) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.consecutivo_codigo_inteligente)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Tipo Puesto (con select) -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.tipo_puesto) || item.estado === 'REPETIDO'">
+                        <ng-container *ngIf="celdaTieneError(item.tipo_puesto) || item.estado === 'REPETIDO'">
+                          <select class="form-select form-select-sm"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="tipo_puesto"
+                                  [attr.data-orgvalue]="getValorLimpio(item.tipo_puesto)"
+                                  (change)="onSelectChange($event, i, 'tipo_puesto', item)">
+                            <option value="">-- Selecciona --</option>
+                            <option *ngFor="let tipo of catalogosSelect?.['tipo_puesto'] || []"
+                                    [value]="tipo.value"
+                                    [selected]="tipo.value === getValorLimpio(item.tipo_puesto)">
+                              {{tipo.value}} - {{tipo.text}}
+                            </option>
+                          </select>
+                        </ng-container>
+                        <span *ngIf="!celdaTieneError(item.tipo_puesto) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.tipo_puesto)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Tipo Ocupación (con select) -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.tipo_ocupacion) || item.estado === 'REPETIDO'">
+                        <ng-container *ngIf="celdaTieneError(item.tipo_ocupacion) || item.estado === 'REPETIDO'">
+                          <select class="form-select form-select-sm"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="tipo_ocupacion"
+                                  [attr.data-orgvalue]="getValorLimpio(item.tipo_ocupacion)"
+                                  (change)="onSelectChange($event, i, 'tipo_ocupacion', item)">
+                            <option value="">-- Selecciona --</option>
+                            <option *ngFor="let tipo of catalogosSelect?.['tipo_ocupacion'] || []"
+                                    [value]="tipo.value"
+                                    [selected]="tipo.value === getValorLimpio(item.tipo_ocupacion)">
+                              {{tipo.value}} - {{tipo.text}}
+                            </option>
+                          </select>
+                        </ng-container>
+                        <span *ngIf="!celdaTieneError(item.tipo_ocupacion) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.tipo_ocupacion)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Tipo Función (con select) -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.tipo_funcion) || item.estado === 'REPETIDO'">
+                        <ng-container *ngIf="celdaTieneError(item.tipo_funcion) || item.estado === 'REPETIDO'">
+                          <select class="form-select form-select-sm"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="tipo_funcion"
+                                  [attr.data-orgvalue]="getValorLimpio(item.tipo_funcion)"
+                                  (change)="onSelectChange($event, i, 'tipo_funcion', item)">
+                            <option value="">-- Selecciona --</option>
+                            <option *ngFor="let tipo of catalogosSelect?.['tipo_funcion'] || []"
+                                    [value]="tipo.value"
+                                    [selected]="tipo.value === getValorLimpio(item.tipo_funcion)">
+                                {{tipo.value}} - {{tipo.text}}
+                            </option>
+                          </select>
+                        </ng-container>
+                        <span *ngIf="!celdaTieneError(item.tipo_funcion) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.tipo_funcion)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Denominación -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.denominacion) || item.estado === 'REPETIDO'">
+                        <textarea *ngIf="celdaTieneError(item.denominacion) || item.estado === 'REPETIDO'"
+                                  class="celda-editable"
+                                  [class.bkg-rojo]="celdaTieneError(item.denominacion)"
+                                  [value]="getValorLimpio(item.denominacion)"
+                                  (blur)="onBlurCampo($event, i, 'denominacion', item)"
+                                  (keydown.enter)="onEnterCampo($any($event))"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="denominacion"
+                                  [attr.data-orgvalue]="getValorLimpio(item.denominacion)"
+                                  rows="2"></textarea>
+                        <span *ngIf="!celdaTieneError(item.denominacion) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.denominacion)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Tipo Estratégico (con select) -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.tipo_estrategico) || item.estado === 'REPETIDO'">
+                        <ng-container *ngIf="celdaTieneError(item.tipo_estrategico) || item.estado === 'REPETIDO'">
+                          <select class="form-select form-select-sm"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="tipo_estrategico"
+                                  [attr.data-orgvalue]="getValorLimpio(item.tipo_estrategico)"
+                                  (change)="onSelectChange($event, i, 'tipo_estrategico', item)">
+                            <option value="">-- Selecciona --</option>
+                            <option *ngFor="let tipo of catalogosSelect?.['tipo_estrategico'] || []"
+                                    [value]="tipo.value"
+                                    [selected]="tipo.value === getValorLimpio(item.tipo_estrategico)">
+                              {{tipo.text || '-'}}
+                            </option>
+                          </select>
+                        </ng-container>
+                        <span *ngIf="!celdaTieneError(item.tipo_estrategico) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.tipo_estrategico)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Código Inteligente Jefe -->
+                      <td class="celda-info align-middle"
+                          [class.bkg-rojo]="celdaTieneError(item.codigo_inteligente_jefe) || item.estado === 'REPETIDO'">
+                        <textarea *ngIf="celdaTieneError(item.codigo_inteligente_jefe) || item.estado === 'REPETIDO'"
+                                  class="celda-editable"
+                                  [class.bkg-rojo]="celdaTieneError(item.codigo_inteligente_jefe)"
+                                  [value]="getValorLimpio(item.codigo_inteligente_jefe)"
+                                  (blur)="onBlurCampo($event, i, 'codigo_inteligente_jefe', item)"
+                                  (keydown.enter)="onEnterCampo($any($event))"
+                                  [attr.data-index]="getGlobalIndex(i)"
+                                  data-field="codigo_inteligente_jefe"
+                                  [attr.data-orgvalue]="getValorLimpio(item.codigo_inteligente_jefe)"
+                                  rows="1"></textarea>
+                        <span *ngIf="!celdaTieneError(item.codigo_inteligente_jefe) && item.estado !== 'REPETIDO'">
+                          {{getValorLimpio(item.codigo_inteligente_jefe)}}
+                        </span>
+                      </td>
+                      
+                      <!-- Estado -->
+                      <td class="align-middle">
+                        <span *ngIf="item.estado === 'REPETIDO'">
+                          <span class="badge bg-warning text-dark">REPETIDO</span>
+                          <button class="btn btn-sm btn-danger ms-2"
+                                  (click)="eliminarRegistro(getGlobalIndex(i), archivoActivoTabla)">
+                            Eliminar
+                          </button>
+                        </span>
+                        <span *ngIf="item.estado !== 'REPETIDO'">
+                          <span [ngClass]="getEstadoBadgeClass(item.estado)">
+                            {{item.estado}}
+                          </span>
+                        </span>
+                      </td>
+                      
+                      <!-- Comentario -->
+                      <td class="align-middle">
+                        <span *ngIf="item.comentario" class="text-danger fw-bold" [title]="item.comentario">
+                          {{item.comentario.length > 50 ? item.comentario.substring(0, 50) + '...' : item.comentario}}
+                        </span>
+                        <span *ngIf="!item.comentario">-</span>
+                      </td>
+                      
+                      <!-- Tipo Plaza -->
+                      <td class="align-middle">
+                        <span [ngClass]="getTipoPlazaBadgeClass(item.tipo_plaza)">
+                          {{item.tipo_plaza}}
+                        </span>
+                      </td>
+                    </tr>
+                    
+                    <!-- Mensaje cuando no hay datos -->
+                    <tr *ngIf="getPageData().length === 0">
+                      <td [colSpan]="tableHeaders.length" class="text-center text-muted py-4">
+                        No se encontraron registros que coincidan con los filtros
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Paginación -->
+              <div class="d-flex justify-content-between align-items-center mt-3">
+                <div>
+                  <span class="text-muted">{{getTextoPaginacion()}}</span>
+                </div>
+                <div>
+                  <button id="prevPage" class="btn btn-outline-primary btn-sm"
+                          (click)="goToPrevPage()" 
+                          [disabled]="currentPage === 1 || filteredData.length === 0">
+                    Anterior
+                  </button>
+                  <span class="mx-2">Página {{currentPage}} de {{getTotalPaginas()}}</span>
+                  <button id="nextPage" class="btn btn-outline-primary btn-sm"
+                          (click)="goToNextPage()" 
+                          [disabled]="currentPage === getTotalPaginas() || filteredData.length === 0">
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+              
+              <div class="mt-3">
+                <button (click)="verDtsPdf()" class="btn btn-outline-primary ">
+                  <i class="fas fa-download"></i> Descargar JSON
+                </button>
+                <button (click)="toggleColumnsVisibility()" class="btn btn-outline-secondary ms-2">
+                  <i class="fas fa-columns"></i> Mostrar/Ocultar Columnas
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

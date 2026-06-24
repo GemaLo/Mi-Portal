@@ -1,0 +1,189 @@
+/* frontend/src/app/components/control-de-permisos/control-de-permisos.component.css */
+/* Estilos IDÉNTICOS a tu código original */
+
+.control-permisos-container {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+}
+
+.header-admin {
+    background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-primario-claro) 100%);
+    color: white;
+    padding: 20px 0;
+    border-radius: 0 0 15px 15px;
+    margin-bottom: 30px;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.card-header {
+    background: white;
+    border-bottom: 2px solid var(--color-primario);
+    font-weight: 600;
+}
+
+.btn-primary {
+    background-color: var(--color-primario);
+    border-color: var(--color-primario);
+}
+
+.btn-primary:hover {
+    background-color: #510f2a;
+    border-color: #510f2a;
+}
+
+.btn-success {
+    background-color: var(--color-secundario);
+    border-color: var(--color-secundario);
+}
+
+.btn-warning {
+    background-color: var(--color-terciario);
+    border-color: var(--color-terciario);
+    color: #000;
+}
+
+.table th {
+    background-color: var(--color-primario);
+    color: white;
+    border: none;
+    font-weight: 600;
+}
+
+.permisos-checkbox {
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+.empleado-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primario), var(--color-primario-claro));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.badge-estado {
+    font-size: 0.75rem;
+}
+
+.acciones-rapidas {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Modal personalizado */
+.modal-header {
+    background-color: var(--color-primario);
+    color: white;
+}
+
+.modal-header .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.config-modulo {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: #f8f9fa;
+}
+
+.config-modulo h6 {
+    color: var(--color-primario);
+    margin-bottom: 1rem;
+}
+
+.permisos-avanzados .form-check {
+    margin-bottom: 0.5rem;
+}
+
+/* Estilos para DataTables */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 1rem;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border: 1px solid #dee2e6 !important;
+    margin: 0 2px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: var(--color-primario) !important;
+    border-color: var(--color-primario) !important;
+    color: white !important;
+}
+
+/* Loading overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1040;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000;
+}
+
+.modal-backdrop.show {
+    opacity: 0.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header-admin .text-end {
+        text-align: left !important;
+        margin-top: 15px;
+    }
+    
+    .acciones-rapidas {
+        flex-direction: column;
+        gap: 3px;
+    }
+    
+    .btn-sm {
+        width: 100%;
+    }
+    
+    .config-modulo {
+        padding: 0.75rem;
+    }
+}

@@ -1,0 +1,23 @@
+<div class="app-container">
+  <!-- Sidebar -->
+  <aside class="sidebar" >
+    <app-sidebar [isCollapsed]="isSidebarCollapsed"></app-sidebar>
+  </aside>
+
+  <!-- Contenido Principal -->
+  <div class="main-content">
+    <!-- Navbar -->
+    <app-navbar 
+      [pageTitle]="pageTitle"
+      [pageDetalle]="pageDetalle"
+      [userName]="userName"
+      [userRole]="userRole"
+      (toggleSidebar)="toggleSidebar()">
+    </app-navbar>
+
+    <!-- Contenido Dinámico -->
+    <main class="content-area">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

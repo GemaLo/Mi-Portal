@@ -1,0 +1,468 @@
+<div class="container-fluid py-4">
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h3 class="display-4">{{ estadisticas.total }}</h3>
+                    <p class="text-muted mb-0">Total Scripts</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h3 class="display-4 text-success">{{ estadisticas.ejecutadosExito }}</h3>
+                    <p class="text-muted mb-0">Ejecutados ✓</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h3 class="display-4 text-danger">{{ estadisticas.ejecutadosFallo }}</h3>
+                    <p class="text-muted mb-0">Fallidos ✗</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h3 class="display-4">{{ estadisticas.tiempoPromedio | number: '1.0-0' }}ms</h3>
+                    <p class="text-muted mb-0">Tiempo Promedio</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">🔍 Buscar</label>
+                    <input type="text" class="form-control" placeholder="Nombre, descripción o created_by..." 
+                           [(ngModel)]="filtroBusqueda" (input)="aplicarFiltros()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">📋 Tipo</label>
+                    <select class="form-select" [(ngModel)]="filtroTipo" (change)="aplicarFiltros()">
+                        <option value="">Todos</option>
+                        <option *ngFor="let tipo of tiposScript" [value]="tipo">{{ tipo }}</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">⚡ Estado</label>
+                    <select class="form-select" [(ngModel)]="filtroEstado" (change)="aplicarFiltros()">
+                        <option value="">Todos</option>
+                        <option *ngFor="let estado of estadosScript" [value]="estado">{{ estado }}</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">🌍 Entorno</label>
+                    <select class="form-select" [(ngModel)]="filtroEntorno" (change)="aplicarFiltros()">
+                        <option value="">Todos</option>
+                        <option *ngFor="let entorno of entornos" [value]="entorno">{{ entorno }}</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-outline-secondary w-100" (click)="limpiarFiltros()">
+                        🗑️ Limpiar filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Grid -->
+    <div class="row">
+        <div class="col-12 mb-3">
+            <button class="btn btn-primary" (click)="abrirModalNuevo()">
+                ➕ Nuevo Script
+            </button>
+        </div>
+        <!-- Cards -->
+        <div class="col-12"> 
+            <div class="row">
+                <div class="col-md-6 col-lg-4 mb-3" *ngFor="let script of filteredScripts">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <span class="fs-4 me-2">{{ getIconoTipo(script.tipo) }}</span>
+                                    <strong>{{ script.nombre }}</strong>
+                                </div>
+                                <span [class]="getClassPorEstado(script.estado)">{{ script.estado }}</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text text-muted small">{{ script.descripcion }}</p>
+                            <hr>
+                            <div class="mb-2">
+                                <span class="badge bg-secondary me-1">v{{ script.version_actual }}</span>
+                                <span class="badge bg-info me-1">{{ script.tipo }}</span>
+                                <span class="badge bg-dark">{{ script.entorno }}</span>
+                                <span *ngIf="script.esCritico" class="badge bg-danger">⚠️ Crítico</span>
+                            </div>
+                            <div class="small text-muted">
+                                <div>👤 {{ script.created_by }}</div>
+                                <div>📅 {{ script.updated_at | date:'dd/MM/yyyy' }}</div>
+                                <!-- <div *ngIf="script.tiempoEjecucion" class="text-success">
+                                    ⏱️ {{ script.tiempoEjecucion }}ms
+                                </div> -->
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <div class="btn-group w-100" role="group">
+                                <button class="btn btn-sm btn-outline-primary" (click)="verDetalle(script)">
+                                    👁️ Ver
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" (click)="ejecutarScript(script)" 
+                                        [disabled]="script.estado === 'EJECUTADO'"
+                                        >
+                                    ▶️ Ejecutar
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" (click)="verHistorial(script)">
+                                    📜 Historial
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" (click)="abrirModalEditar(script)">
+                                    ✏️ Editar
+                                </button>
+                            </div>
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-outline-danger w-100" (click)="confirmarEliminar(script.id)">
+                                    🗑️ Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12" *ngIf="filteredScripts.length === 0">
+                    <div class="alert alert-info text-center">
+                        <!-- No se encontraron scripts con los filtros aplicados -->
+                         Cargando datos
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear/editar script -->
+<div class="modal fade" [class.show]="showScriptModal" [style.display]="showScriptModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ editingScript ? 'Editar Script' : 'Nuevo Script' }}</h5>
+                <button type="button" class="btn-close" (click)="cerrarModalScript()"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nombre del Script *</label>
+                            <input type="text" class="form-control" [(ngModel)]="formData.nombre" name="nombre" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Tipo *</label>
+                            <select class="form-select" [(ngModel)]="formData.tipo" name="tipo">
+                                <option *ngFor="let tipo of tiposScript" [value]="tipo">{{ tipo }}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Entorno</label>
+                            <select class="form-select" [(ngModel)]="formData.entorno" name="entorno">
+                                <option *ngFor="let entorno of entornos" [value]="entorno">{{ entorno }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Agregar archivo -->
+                    <div class="row">
+                        <span>Se solicito el cambio?</span>
+                                <input type="checkbox" name="solicitud" id="solicitud">
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Quien Solicita? *</label>
+                                    <input type="text" class="form-control" name="Solicitante" required>
+                                </div>
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-info btn-lg" (click)="abrirGestorArchivos()">
+                              📎 Gestionar Archivos del Script
+                              <span class="badge bg-dark ms-2" *ngIf="archivosAdjuntos > 0">{{ archivosAdjuntos }}</span>
+                            </button>
+                            <small class="text-muted d-block mt-1">
+                              Sube documentación, scripts adicionales, diagramas, etc.
+                            </small>
+                            <button type="button" class="btn btn-info btn-lg" (click)="mostrarDts()">
+                              verDTS
+                              <span class="badge bg-dark ms-2" *ngIf="archivosAdjuntos > 0">{{ archivosAdjuntos }}</span>
+                            </button>
+                            <button type="button" class="btn btn-info btn-lg" (click)="mostrarPDF()">
+                              Ver PDF
+                              <span class="badge bg-dark ms-2" >Mostrar PDF</span>
+                            </button>
+                            
+                            <iframe *ngIf = "flagVerPdf"
+                              [src]="pdfUrl"
+                              width="100%"
+                              height="800px"
+                              style="border: none;">
+                            </iframe>                        
+                        </div>
+                        <!-- <div class="col-md-6 mb-3">
+                            <label class="form-label">Nombre del Script *</label>
+                            <input type="text" class="form-control" [(ngModel)]="formData.nombre" name="nombre" required>
+                        </div> -->
+                        
+                        
+
+                        <div class="modal fade" [class.show]="mostrarModalArchivos" 
+                                [style.display]="mostrarModalArchivos ? 'block' : 'none'" 
+                                tabindex="-1" style="background-color: rgba(0,0,0,0.5)">
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content">
+                                <app-archivos-db 
+                                [idVersion]="idVersionTemporal" 
+                                [modoModal]="true"
+                                (cerrar)="cerrarGestorArchivos()"
+                                (archivosActualizados)="onArchivosActualizados($event)">
+                                </app-archivos-db>
+                            </div>
+                            </div>
+                        </div>
+                        
+                        <div *ngIf="mostrarModalArchivos" class="modal-backdrop fade show"></div>
+                        
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" rows="2" [(ngModel)]="formData.descripcion" name="descripcion"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Dependencias (separar por comas)</label>
+                            <input type="text" class="form-control" [(ngModel)]="formData.dependencias" name="dependencias" 
+                                   placeholder="ej: usuarios, productos, ventas">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Etiquetas (separar por comas)</label>
+                            <input type="text" class="form-control" [(ngModel)]="formData.etiquetas" name="etiquetas" 
+                                   placeholder="ej: SC, GN, urgente, bugfix">
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <!-- <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" [(ngModel)]="formData.esCritico" name="esCritico" id="esCritico">
+                                <label class="form-check-label" for="esCritico">
+                                    ⚠️ Script crítico (requiere confirmación)
+                                </label>
+                            </div>
+                        </div> -->
+                        <div class="col-md-6">
+                            <label class="form-label">Estado</label>
+                            <select class="form-select" [(ngModel)]="formData.estado" name="estado">
+                                <option *ngFor="let estado of estadosScript" [value]="estado">{{ estado }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Contenido del Script *</label>
+                        <textarea class="form-control font-monospace" rows="15" [(ngModel)]="formData.contenido" name="contenido" 
+                                  placeholder="Escribe tu código SQL aquí..."></textarea>
+                        <small class="text-muted">Código SQL del script (vista, función, tabla, procedimiento o trigger)</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="position: sticky;
+    bottom: 10px;
+    right: 10px;
+    border-top: none;">
+                <button type="button" class="btn btn-secondary" (click)="cerrarModalScript()">Cancelar</button>
+                <button type="button" class="btn btn-primary" (click)="guardarScript()">Guardar Script</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para confirmar eliminación -->
+<div class="modal fade" [class.show]="showDeleteModal" [style.display]="showDeleteModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">⚠️ Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" (click)="cerrarModalEliminar()"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar este script?</p>
+                <p class="text-danger">Esta acción no se puede deshacer y eliminará todas las versiones del script.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="cerrarModalEliminar()">Cancelar</button>
+                <button type="button" class="btn btn-danger" (click)="eliminarScript()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver detalle -->
+<div class="modal fade" [class.show]="showDetailModal" [style.display]="showDetailModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content" *ngIf="selectedScript">
+            <div class="modal-header">
+                <h5 class="modal-title">📄 Detalle del Script: {{ selectedScript.nombre }}</h5>
+                <button type="button" class="btn-close" (click)="cerrarModalDetalle()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Tipo:</strong> {{ selectedScript.tipo }}<br>
+                        <strong>Versión:</strong> {{ selectedScript.version_actual }}<br>
+                        <strong>Estado:</strong> <span [class]="getClassPorEstado(selectedScript.estado)">{{ selectedScript.estado }}</span><br>
+                        <strong>Entorno:</strong> {{ selectedScript.entorno }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>created_by:</strong> {{ selectedScript.created_by }}<br>
+                        <strong>Creado:</strong> {{ selectedScript.created_at | date:'dd/MM/yyyy HH:mm' }}<br>
+                        <strong>Modificado:</strong> {{ selectedScript.updated_at | date:'dd/MM/yyyy HH:mm' }}<br>
+                        <strong *ngIf="selectedScript.fechaUltimaEjecucion">Última ejecución:</strong> 
+                        {{ selectedScript.fechaUltimaEjecucion | date:'dd/MM/yyyy HH:mm' }}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Descripción:</strong>
+                    <p>{{ selectedScript.descripcion }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Dependencias:</strong>
+                    <div>
+                        <span class="badge bg-secondary me-1" *ngFor="let dep of dependenciasArray">{{ dep }}</span>
+                        <span *ngIf="dependenciasArray.length === 0" class="text-muted">Sin dependencias</span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Etiquetas:</strong>
+                    <div>
+                        <span class="badge bg-info me-1" *ngFor="let tag of etiquetasArray">{{ tag }}</span>
+                        <span *ngIf="etiquetasArray.length === 0" class="text-muted">Sin etiquetas</span>
+                    </div>
+                </div>
+                
+                <!-- <div class="mb-3" *ngIf="selectedScript.resultadoEjecucion">
+                    <strong>Resultado de última ejecución:</strong>
+                    <div class="alert alert-info mt-2">
+                        {{ selectedScript.resultadoEjecucion }}
+                        <span *ngIf="selectedScript.tiempoEjecucion"> ({{ selectedScript.tiempoEjecucion }}ms)</span>
+                    </div>
+                </div> -->
+                
+                <div class="mb-3" *ngIf="selectedScript.logsError">
+                    <strong>Logs de error:</strong>
+                    <pre class="alert alert-danger mt-2"><code>{{ selectedScript.logsError }}</code></pre>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Contenido del script:</strong>
+                    <pre class="bg-dark text-light p-3 rounded"><code>{{ selectedScript.contenido }}</code></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="cerrarModalDetalle()">Cerrar</button>
+                <button type="button" class="btn btn-success" (click)="ejecutarScript(selectedScript)">▶️ Ejecutar</button>
+                <button type="button" class="btn btn-warning" (click)="abrirModalEditar(selectedScript); cerrarModalDetalle()">✏️ Editar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver historial de versiones -->
+<div class="modal fade" [class.show]="showHistoryModal" [style.display]="showHistoryModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" *ngIf="selectedScript">
+            <div class="modal-header">
+                <h5 class="modal-title"> Historial de Versiones - {{ selectedScript.nombre }}</h5>
+                <button type="button" class="btn-close" (click)="cerrarModalHistorial()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group">
+                    <div *ngFor="let version of selectedScript.script_versiones | slice:0:10" class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-1">Versión {{ version.version }}</h6>
+                            <button class="btn btn-sm btn-outline-primary" (click)="verVersion(version)">
+                                Ver detalle
+                            </button>
+                        </div>
+                        <p class="mb-1 small">{{ version.cambios }}</p>
+                        <small class="text-muted">
+                            {{ version.created_by }} - {{ version.updated_at | date:'dd/MM/yyyy HH:mm' }}
+                        </small>
+                        
+                        <div *ngIf="selectedVersion === version" class="mt-2">
+                            <pre class="bg-light p-2 rounded small"><code>{{ version.contenido }}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div *ngIf="selectedScript.script_versiones.length === 0" class="alert alert-info">
+                    No hay versiones anteriores de este script
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="cerrarModalHistorial()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver dependencias -->
+<div class="modal fade" [class.show]="showDependenciesModal" [style.display]="showDependenciesModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" *ngIf="selectedScript">
+            <div class="modal-header">
+                <h5 class="modal-title">🔗 Árbol de Dependencias - {{ selectedScript.nombre }}</h5>
+                <button type="button" class="btn-close" (click)="cerrarModalDependencias()"></button>
+            </div>
+            <div class="modal-body">
+                <h6>📥 Este script depende de:</h6>
+                <ul class="list-group mb-3">
+                    <li *ngFor="let dep of dependenciasArray" class="list-group-item">
+                        📌 {{ dep }}
+                    </li>
+                    <li *ngIf="dependenciasArray.length === 0" class="list-group-item text-muted">
+                        Sin dependencias
+                    </li>
+                </ul>
+                
+                <h6>📤 Scripts que dependen de este:</h6>
+                <ul class="list-group">
+                    <li *ngFor="let script of getDependentScripts(selectedScript.nombre)" class="list-group-item">
+                        📄 {{ script.nombre }} ({{ script.tipo }})
+                        <span class="badge bg-secondary ms-2">v{{ script.version_actual }}</span>
+                    </li>
+                    <li *ngIf="getDependentScripts(selectedScript.nombre).length === 0" class="list-group-item text-muted">
+                        Sin scripts dependientes
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="cerrarModalDependencias()">Cerrar</button>
+                <button type="button" class="btn btn-warning" (click)="analizarImpacto(selectedScript)" *ngIf="getDependentScripts(selectedScript.nombre).length > 0">
+                    ⚠️ Analizar Impacto
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fondo del modal cuando está activo -->
+<div *ngIf="showScriptModal || showDeleteModal || showDetailModal || showHistoryModal || showDependenciesModal" 
+     class="modal-backdrop fade show"></div>

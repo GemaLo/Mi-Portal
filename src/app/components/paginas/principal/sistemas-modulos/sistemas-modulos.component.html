@@ -1,0 +1,353 @@
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-info">
+                <h3>8</h3>
+                <p>Sistemas activos</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📦</div>
+            <div class="stat-info">
+                <h3>24</h3>
+                <p>Módulos totales</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+                <h3>12</h3>
+                <p>En ejecución</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-section">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" placeholder="Buscar sistemas o módulos..." 
+               (input)="onSearch($event)">
+        <div class="search-filters">
+            <span class="filter-tag" [class.activo]="currentFilter === 'todos'" 
+                  (click)="setFilter('todos')">Todos</span>
+            <span class="filter-tag" [class.activo]="currentFilter === 'rrhh'" 
+                  (click)="setFilter('rrhh')">RRHH</span>
+            <span class="filter-tag" [class.activo]="currentFilter === 'ingenieria'" 
+                  (click)="setFilter('ingenieria')">Ingeniería</span>
+            <span class="filter-tag" [class.activo]="currentFilter === 'activos'" 
+                  (click)="setFilter('activos')">Activos</span>
+        </div>
+    </div>
+
+    <!-- Systems Grid
+    <div class="cards-grid">
+        @for (system of filteredSystems; track system.id_sistema) {
+            <div class="card" [attr.data-system]="system.id_sistema" [attr.data-department]="system.departamento">
+                <span class="system-badge">SISTEMA {{ system.departamento | uppercase }}</span>
+                <h3 class="system-title">{{ system.nombre }}</h3>
+                <div class="system-meta">
+                    <span>📅 Inicio: {{ system.fh_inicio | date:'dd/MM/yyyy' }}</span>
+                    <span>•</span>
+                    <span>Fin: {{ system.fhfin | date:'dd/MM/yyyy' }}</span>
+                </div>
+                <p class="system-description">{{ system.descripcion }}</p>
+                
+                <div class="modules-container">
+                    <ul class="modules-list">
+                        @for (module of system.modules; track module.id_modulo_sistema) {
+                            <li class="module-item" [attr.data-module-id]="module.id_modulo_sistema" [attr.data-system]="system.id_sistema">
+                                <div class="module-info">
+                                    <span class="module-status" [class.inactive]="!module.activo"></span>
+                                    <span class="module-name">{{ module.nombre }}</span>
+                                    <span class="module-date">Creado: {{ module.creationDate | date:'dd/MM/yy' }}</span>
+                                </div>
+                                <button class="btn-edit-module" (click)="openEditModuleModal(module, system.id_sistema)">
+                                    ✎ Editar
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+                <div class="card-actions">
+                    <button class="btn-outline" (click)="openEditSystemModal(system)">✎ Editar Sistema</button>
+                    <button class="btn-primary-corp" (click)="viewModules(system)">◉ Ver Módulos</button>
+                </div>
+            </div>
+        }
+    </div>
+    -->
+    
+    <div *ngIf="!cargando && systems.length > 0" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <div *ngFor="let sistema of systems" class="col">
+            <div class="card h-100 shadow-sm">
+                <!-- Header de la tarjeta -->
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <!-- Icono del sistema -->
+                        <i *ngIf="sistema.icono" [class]="'bi bi-' + sistema.icono + ' me-2 fs-4'"></i>
+                        <i *ngIf="!sistema.icono" class="bi bi-gear me-2 fs-4"></i>
+                        <h5 class="mb-0">{{ sistema.nombre }}</h5>
+                    </div>
+                    <span [class]="getEstadoSistema(sistema.activo).clase">
+                      {{ getEstadoSistema(sistema.activo) }}
+                    </span>
+                </div>
+                
+                <!-- Cuerpo de la tarjeta -->
+                <div class="card-body">
+                    <p class="card-text text-muted mb-3">
+                      {{ sistema.descripcion }}
+                    </p>
+                    
+                    <!-- Fechas del sistema -->
+                    <div class="small mb-3">
+                        <div class="d-flex align-items-center mb-1">
+                          <i class="bi bi-calendar-plus me-2"></i>
+                          <span>Inicio: {{ formatearFecha(sistema.fh_inicio) }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-calendar-x me-2"></i>
+                          <span>Fin: {{ formatearFecha(sistema.fhfin) }}</span>
+                        </div>
+                    </div>
+                  
+                  <!-- Módulos del sistema -->
+                  <div *ngIf="sistema.modules && sistema.modules.length > 0" class="mt-3">
+                    <p class="fw-bold mb-2">
+                      <i class="bi bi-puzzle me-2"></i>
+                      Módulos ({{ sistema.modules.length }})
+                      <span class="badge bg-info ms-2">
+                        {{ contarModulosActivos(sistema.modules) }} activos
+                      </span>
+                    </p>
+                    
+                    <!-- Lista de módulos -->
+                    <div class="d-flex flex-wrap gap-1">
+                      <span *ngFor="let modulo of sistema.modules" 
+                            class="badge" 
+                            [class.bg-success]="modulo.activo === true"
+                            [class.bg-secondary]="modulo.activo !== true"
+                            [title]="modulo.valor_1">
+                        {{ modulo.nombre }}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div *ngIf="!sistema.modules || sistema.modules.length === 0" class="text-muted fst-italic small">
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    Sin módulos configurados
+                  </div>
+                </div>
+                
+                <!-- Footer de la tarjeta con acciones -->
+                <div class="card-footer bg-transparent">
+                  <div class="btn-group w-100" role="group">
+                    <button class="btn btn-sm btn-outline-primary" (click)="openEditSystemModal(sistema)">
+                      <i class="bi bi-pencil me-1"></i> Editar
+                    </button>
+                    <button class="btn btn-sm btn-outline-info" (click)="verModulos(sistema)">
+                      <i class="bi bi-puzzle me-1"></i> Módulos
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" (click)="eliminarSistema(sistema)">
+                      <i class="bi bi-trash me-1"></i> Eliminar
+                    </button>
+                  </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  
+  <!-- Mensaje cuando no hay sistemas -->
+  <div *ngIf="!cargando && systems.length === 0" class="text-center my-5">
+    <i class="bi bi-database-slash display-1 text-muted"></i>
+    <p class="mt-3 text-muted">No hay sistemas disponibles</p>
+  </div>
+
+    <!-- Botón Agregar Sistema -->
+    <button class="btn-add-system-corp" (click)="openAddSystemModal()">
+        <span>+</span> Agregar Nuevo Sistema
+        <span class="btn-subtext">(Vacaciones / Ficha Técnica)</span>
+    </button>
+
+<!-- MODAL PRINCIPAL (para agregar/editar sistemas) -->
+<div class="modal-corp" [class.activo]="showSystemModal">
+    <div class="modal-content-corp">
+        <div class="modal-header-corp">
+            <h2>
+                {{ editingSystem ? '✎ Editar Sistema' : '➕ Nuevo Sistema' }}
+                @if (editingSystem) {
+                    <span>{{ editingSystem.nombre | uppercase }}</span>
+                }
+            </h2>
+            <button class="close-modal-corp" (click)="closeModal()">&times;</button>
+        </div>
+
+        @if (editingSystem) {
+            <div class="edit-indicator">
+                ✎ Editando sistema: <strong>{{ editingSystem.nombre }}</strong>
+            </div>
+        }
+
+        <form (ngSubmit)="saveSystem()">
+            <!-- Selector de departamento -->
+            <div class="form-group full-width">
+                <label>Tipo de Sistema / Departamento</label>
+                <select [(ngModel)]="formData.department" name="department" required>
+                    <option value="">Seleccionar departamento...</option>
+                    <option value="RRHH">RRHH - Recursos Humanos</option>
+                    <option value="INGENIERÍA">INGENIERÍA - Técnico</option>
+                    <option value="FINANZAS">FINANZAS - Financiero</option>
+                    <option value="MARKETING">MARKETING - Comercial</option>
+                </select>
+            </div>
+
+            <!-- Sistema -->
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label>Nombre del Sistema</label>
+                    <input type="text" [(ngModel)]="formData.nombre" name="name" 
+                           placeholder="Ej: Vacaciones 2024" required>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label>Descripción</label>
+                    <textarea [(ngModel)]="formData.descripcion" name="description" 
+                              rows="2" placeholder="Propósito y alcance del sistema..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>URL Icono</label>
+                    <input type="url" [(ngModel)]="formData.iconUrl" name="iconUrl" 
+                           placeholder="https://ejemplo.com/icono.svg">
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha Creación</label>
+                    <input type="date" [(ngModel)]="formData.creationDate" name="creationDate">
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha Inicio</label>
+                    <input type="date" [(ngModel)]="formData.fh_inicio" name="fh_inicio">
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha Fin</label>
+                    <input type="date" [(ngModel)]="formData.fhfin" name="fhfin">
+                </div>
+
+                <div class="form-group">
+                    <label>Activo</label>
+                    <div class="checkbox-group-corp">
+                        <input type="checkbox" [(ngModel)]="formData.activo" name="active">
+                        <span>Sistema activo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Módulos -->
+            <div class="modules-section-corp">
+                <h3>📦 Módulos del Sistema</h3>
+                
+                <div id="modulesContainer">
+                    @for (module of formModules; track module.tempId; let i = $index) {
+                        <div class="module-form-corp">
+                            <button type="button" class="btn-remove-module" (click)="removeModule(i)">✕ Eliminar</button>
+                            <div class="form-group">
+                                <label>Nombre del Módulo</label>
+                                <input type="text" [(ngModel)]="module.nombre" [name]="'moduleName'+i" 
+                                       placeholder="Ej: Solicitudes">
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                                <div class="form-group">
+                                    <label>Fecha Creación</label>
+                                    <input type="date" [(ngModel)]="module.creationDate" [name]="'moduleCreation'+i">
+                                </div>
+                                <div class="form-group">
+                                    <label>Fecha Inicio</label>
+                                    <input type="date" [(ngModel)]="module.fh_inicio" [name]="'moduleStart'+i">
+                                </div>
+                                <div class="form-group">
+                                    <label>Fecha Fin</label>
+                                    <input type="date" [(ngModel)]="module.fhfin" [name]="'moduleEnd'+i">
+                                </div>
+                            </div>
+
+                            <div class="checkbox-group-corp" style="margin-top: 0.5rem;">
+                                <input type="checkbox" [(ngModel)]="module.activo" [name]="'moduleActive'+i">
+                                <label>Módulo activo</label>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <button type="button" class="btn-add-module-corp" (click)="addModuleToForm()">
+                    + Agregar Módulo
+                </button>
+            </div>
+
+            <button type="submit" class="btn-save-corp">
+                {{ editingSystem ? 'Actualizar Sistema' : 'Crear Sistema' }}
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL PARA EDITAR MÓDULOS -->
+<div class="modal-corp" [class.activo]="showModuleModal">
+    <div class="modal-content-corp">
+        <div class="modal-header-corp">
+            <h2>✎ Editar Módulo</h2>
+            <button class="close-modal-corp" (click)="closeModuleModal()">&times;</button>
+        </div>
+
+        <form (ngSubmit)="saveModule()">
+            <!-- Selector de sistema referenciado -->
+            <div class="form-group full-width">
+                <label>Sistema al que pertenece</label>
+                <select [(ngModel)]="moduleFormData.systemRef" name="systemRef" required>
+                    <option value="">Seleccionar sistema...</option>
+                    @for (system of systems; track system.id_sistema) {
+                        <option [value]="system.id_sistema">{{ system.nombre }} ({{ system.departamento }})</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label>Nombre del Módulo</label>
+                    <input type="text" [(ngModel)]="moduleFormData.nombre" name="moduleName" 
+                           placeholder="Ej: Solicitudes" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha Creación</label>
+                    <input type="date" [(ngModel)]="moduleFormData.creationDate" name="moduleCreationDate">
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha Inicio</label>
+                    <input type="date" [(ngModel)]="moduleFormData.fh_inicio" name="modulefh_inicio">
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha Fin</label>
+                    <input type="date" [(ngModel)]="moduleFormData.fhfin" name="fhfin">
+                </div>
+
+                <div class="form-group">
+                    <label>Estado</label>
+                    <div class="checkbox-group-corp">
+                        <input type="checkbox" [(ngModel)]="moduleFormData.activo" name="moduleActive">
+                        <span>Módulo activo</span>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-save-corp">Guardar Módulo</button>
+        </form>
+    </div>
+</div>
